@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>rmw_zenohpico_c</name>
+  <version>0.0.0</version>
+  <description>A ROS 2 middleware implementation using zenoh-pico</description>
+  <maintainer email="blazej@fictionlab.pl">Błażej Sowa</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>microcdr</depend>
+  <depend>rosidl_runtime_c</depend>
+  <depend>rosidl_typesupport_microxrcedds_c</depend>
+  <depend>zenohpico_vendor</depend>
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_cmake_uncrustify</test_depend>
+
+  <member_of_group>rmw_implementation_packages</member_of_group>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
