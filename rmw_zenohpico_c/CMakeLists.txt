@@ -22,17 +22,12 @@ add_library(${PROJECT_NAME}
   ${SRCS}
 )
 
-# Hack to make zenohpico::static target work
-get_target_property(ZENOHPICO_INCLUDES zenohpico::lib INTERFACE_INCLUDE_DIRECTORIES)
-target_include_directories(__zenohpico_static INTERFACE ${ZENOHPICO_INCLUDES})
-set_property(TARGET __zenohpico_static PROPERTY IMPORTED_LOCATION ${ZENOHPICO_INCLUDES}/../lib/libzenohpico.a)
-
 target_link_libraries(${PROJECT_NAME}
   microcdr
   rmw::rmw
   rosidl_runtime_c::rosidl_runtime_c
   rosidl_typesupport_microxrcedds_c::rosidl_typesupport_microxrcedds_c
-  zenohpico::static
+  zenohpico::zenohpico
 )
 
 configure_rmw_library(${PROJECT_NAME})
