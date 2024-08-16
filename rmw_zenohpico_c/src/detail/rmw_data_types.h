@@ -7,6 +7,9 @@
 struct rmw_context_impl_s {
   // An owned session.
   z_owned_session_t session;
+
+  /// Shutdown flag.
+  bool is_shutdown;
 };
 
 struct rmw_init_options_impl_s {
