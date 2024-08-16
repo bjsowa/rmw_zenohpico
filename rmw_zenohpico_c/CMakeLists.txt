@@ -13,9 +13,10 @@ find_package(zenohpico_vendor REQUIRED)
 find_package(zenohpico REQUIRED)
 
 set(SRCS
+  src/detail/identifier.c
   src/rmw_init_options.c
   src/rmw_init.c
-  src/detail/identifier.c
+  src/rmw_zenohpico.c
 )
 
 add_library(${PROJECT_NAME}
