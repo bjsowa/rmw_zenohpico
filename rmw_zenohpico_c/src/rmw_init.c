@@ -46,8 +46,7 @@ rmw_ret_t rmw_init(const rmw_init_options_t* options, rmw_context_t* context) {
   context->impl->is_shutdown = false;
 
   // Initialize the zenoh session.
-  context->impl->session = z_open(z_move(context->options.impl->config));
-  if (!z_session_check(&context->impl->session)) {
+  if (z_open(&context->impl->session, z_move(context->options.impl->config)) < 0) {
     RMW_SET_ERROR_MSG("Error setting up zenoh session");
     ret = RMW_RET_ERROR;
     goto fail_session_open;
@@ -75,10 +74,6 @@ rmw_ret_t rmw_shutdown(rmw_context_t* context) {
                                    rmw_zenohpico_identifier,
                                    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
 
-  // z_undeclare_subscriber(z_move(context->impl->graph_subscriber));
-  // if (context->impl->shm_manager.has_value()) {
-  // z_drop(z_move(context->impl->shm_manager.value()));
-  // }
   // Close the zenoh session
   if (z_close(z_move(context->impl->session)) < 0) {
     RMW_SET_ERROR_MSG("Error while closing zenoh session");
@@ -105,15 +100,6 @@ rmw_ret_t rmw_context_fini(rmw_context_t* context) {
   }
 
   const rcutils_allocator_t* allocator = &context->options.allocator;
-
-  // RMW_TRY_DESTRUCTOR(
-  // static_cast<rmw_zenoh_cpp::GuardCondition*>(context->impl->graph_guard_condition->data)
-  // ->~GuardCondition(),
-  // rmw_zenoh_cpp::GuardCondition, );
-  // allocator->deallocate(context->impl->graph_guard_condition->data, allocator->state);
-
-  // allocator->deallocate(context->impl->graph_guard_condition, allocator->state);
-  // context->impl->graph_guard_condition = nullptr;
 
   allocator->deallocate(context->impl, allocator->state);
 

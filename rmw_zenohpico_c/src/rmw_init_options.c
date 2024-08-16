@@ -39,16 +39,12 @@ rmw_ret_t rmw_init_options_init(rmw_init_options_t* init_options, rcutils_alloca
     goto fail_allocate_init_options_impl;
   });
 
-  init_options->impl->config = z_config_new();
-  if (!z_config_check(&init_options->impl->config)) {
-    ret = RMW_RET_ERROR;
-    goto fail_z_config_new;
-  }
+  z_config_new(&init_options->impl->config);
 
-  if (zp_config_insert(z_loan(init_options->impl->config), Z_CONFIG_MODE_KEY,
-                       z_string_make(rmw_zenohpico_default_mode)) < 0 ||
-      zp_config_insert(z_loan(init_options->impl->config), Z_CONFIG_CONNECT_KEY,
-                       z_string_make(rmw_zenohpico_default_clocator)) < 0) {
+  if (zp_config_insert(z_loan_mut(init_options->impl->config), Z_CONFIG_MODE_KEY,
+                       rmw_zenohpico_default_mode) < 0 ||
+      zp_config_insert(z_loan_mut(init_options->impl->config), Z_CONFIG_CONNECT_KEY,
+                       rmw_zenohpico_default_clocator) < 0) {
     ret = RMW_RET_ERROR;
     goto fail_z_config_insert;
   }
@@ -56,8 +52,7 @@ rmw_ret_t rmw_init_options_init(rmw_init_options_t* init_options, rcutils_alloca
   return RMW_RET_OK;
 
 fail_z_config_insert:
-  z_config_drop(&init_options->impl->config);
-fail_z_config_new:
+  z_config_drop(z_move(init_options->impl->config));
   allocator.deallocate(init_options->impl, allocator.state);
 fail_allocate_init_options_impl:
   rmw_discovery_options_fini(&(init_options->discovery_options));
@@ -119,7 +114,8 @@ rmw_ret_t rmw_init_options_copy(const rmw_init_options_t* src, rmw_init_options_
     goto fail_allocate_init_options_impl;
   });
 
-  tmp.impl->config = z_config_clone(&src->impl->config);
+  // TODO is there a way to copy it?
+  tmp.impl->config = src->impl->config;
 
   *dst = tmp;
 
