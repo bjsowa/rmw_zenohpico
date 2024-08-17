@@ -1,5 +1,5 @@
 #include "detail/guard_condition.h"
-#include "detail/identifier.h"
+#include "detail/identifiers.h"
 #include "detail/rmw_data_types.h"
 #include "rmw/check_type_identifiers_match.h"
 #include "rmw/error_handling.h"

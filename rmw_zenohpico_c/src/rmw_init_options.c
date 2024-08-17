@@ -1,5 +1,5 @@
 #include "detail/defaults.h"
-#include "detail/identifier.h"
+#include "detail/identifiers.h"
 #include "detail/rmw_data_types.h"
 #include "rcutils/allocator.h"
 #include "rcutils/strdup.h"

@@ -14,10 +14,12 @@ find_package(zenohpico REQUIRED)
 
 set(SRCS
   src/detail/guard_condition.c
-  src/detail/identifier.c
+  src/detail/identifiers.c
   src/detail/node.c
   src/detail/wait_set.c
+  src/rmw_features.c
   src/rmw_guard_condition.c
+  src/rmw_identifiers.c
   src/rmw_init_options.c
   src/rmw_init.c
   src/rmw_node.c
