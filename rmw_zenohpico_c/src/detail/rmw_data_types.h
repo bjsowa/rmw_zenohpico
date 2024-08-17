@@ -17,8 +17,4 @@ struct rmw_init_options_impl_s {
   z_owned_config_t config;
 };
 
-typedef struct rmw_zenohpico_node_s {
-  uint8_t __dummy;
-} rmw_zenohpico_node_t;
-
 #endif

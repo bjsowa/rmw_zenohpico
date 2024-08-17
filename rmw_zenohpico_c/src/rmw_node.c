@@ -1,4 +1,5 @@
 #include "detail/identifier.h"
+#include "detail/node.h"
 #include "detail/rmw_data_types.h"
 #include "rcutils/strdup.h"
 #include "rmw/check_type_identifiers_match.h"
@@ -61,12 +62,18 @@ rmw_node_t *rmw_create_node(rmw_context_t *context, const char *name, const char
   RMW_CHECK_FOR_NULL_WITH_MSG(node_data, "failed to allocate memory for node data",
                               goto fail_allocate_node_data;);
 
+  // TODO: Initialize liveliness token for the node to advertise that a new node is in town.
+  if (rmw_zenohpico_node_init(node_data) != RMW_RET_OK) {
+    goto fail_init_node_data;
+  }
+
   node->implementation_identifier = rmw_zenohpico_identifier;
   node->context = context;
   node->data = node_data;
 
   return node;
 
+fail_init_node_data:
   allocator->deallocate(node_data, allocator->state);
 fail_allocate_node_data:
   allocator->deallocate(node->namespace_, allocator->state);
@@ -91,10 +98,10 @@ rmw_ret_t rmw_destroy_node(rmw_node_t *node) {
 
   rcutils_allocator_t *allocator = &node->context->options.allocator;
 
-  // Undeclare liveliness token for the node to advertise that the node has
-  // ridden off into the sunset.
   rmw_zenohpico_node_t *node_data = (rmw_zenohpico_node_t *)node->data;
   if (node_data != NULL) {
+    // TODO: Undeclare liveliness token for the node to advertise that the node has ridden off into
+    // the sunset.
     allocator->deallocate(node_data, allocator->state);
   }
 
