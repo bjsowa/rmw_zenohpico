@@ -13,10 +13,13 @@ find_package(zenohpico_vendor REQUIRED)
 find_package(zenohpico REQUIRED)
 
 set(SRCS
+  src/detail/guard_condition.c
   src/detail/identifier.c
+  src/detail/wait_set.c
+  src/rmw_guard_condition.c
   src/rmw_init_options.c
   src/rmw_init.c
-  src/rmw_zenohpico.c
+  src/rmw_node.c
 )
 
 add_library(${PROJECT_NAME}

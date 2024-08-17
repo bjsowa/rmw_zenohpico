@@ -2,12 +2,9 @@
 #include "detail/rmw_data_types.h"
 #include "rcutils/strdup.h"
 #include "rmw/check_type_identifiers_match.h"
-#include "rmw/domain_id.h"
 #include "rmw/error_handling.h"
-#include "rmw/init.h"
 #include "rmw/validate_namespace.h"
-#include "rmw/validate_node_name.h"\
-#include "zenoh-pico.h"
+#include "rmw/validate_node_name.h"
 
 //==============================================================================
 /// Create a node and return a handle to that node.
@@ -59,8 +56,8 @@ rmw_node_t *rmw_create_node(rmw_context_t *context, const char *name, const char
                               goto fail_allocate_node_namespace;);
 
   // Put metadata into node->data.
-  rmw_node_data_t *node_data =
-      (rmw_node_data_t *)allocator->allocate(sizeof(rmw_node_data_t), allocator->state);
+  rmw_zenohpico_node_t *node_data =
+      (rmw_zenohpico_node_t *)allocator->allocate(sizeof(rmw_zenohpico_node_t), allocator->state);
   RMW_CHECK_FOR_NULL_WITH_MSG(node_data, "failed to allocate memory for node data",
                               goto fail_allocate_node_data;);
 
@@ -96,7 +93,7 @@ rmw_ret_t rmw_destroy_node(rmw_node_t *node) {
 
   // Undeclare liveliness token for the node to advertise that the node has
   // ridden off into the sunset.
-  rmw_node_data_t *node_data = (rmw_node_data_t *)node->data;
+  rmw_zenohpico_node_t *node_data = (rmw_zenohpico_node_t *)node->data;
   if (node_data != NULL) {
     allocator->deallocate(node_data, allocator->state);
   }
