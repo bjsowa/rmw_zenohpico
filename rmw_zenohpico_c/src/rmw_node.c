@@ -102,6 +102,7 @@ rmw_ret_t rmw_destroy_node(rmw_node_t *node) {
   if (node_data != NULL) {
     // TODO: Undeclare liveliness token for the node to advertise that the node has ridden off into
     // the sunset.
+    rmw_zenohpico_node_fini(node_data);
     allocator->deallocate(node_data, allocator->state);
   }
 
