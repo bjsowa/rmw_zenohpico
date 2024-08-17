@@ -21,6 +21,8 @@ set(SRCS
   src/rmw_init_options.c
   src/rmw_init.c
   src/rmw_node.c
+  src/rmw_wait_set.c
+  src/rmw_wait.c
 )
 
 add_library(${PROJECT_NAME}
