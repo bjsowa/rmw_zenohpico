@@ -98,6 +98,11 @@ static bool check_and_attach_condition(const rmw_subscriptions_t *const subscrip
   return false;
 }
 
+static size_t rmw_time_to_us(const rmw_time_t *time) {
+  // TODO: handle overflows?
+  return time->sec * 1000000 + time->nsec / 1000;
+}
+
 //==============================================================================
 /// Waits on sets of different entities and returns when one is ready.
 rmw_ret_t rmw_wait(rmw_subscriptions_t *subscriptions, rmw_guard_conditions_t *guard_conditions,
@@ -144,10 +149,18 @@ rmw_ret_t rmw_wait(rmw_subscriptions_t *subscriptions, rmw_guard_conditions_t *g
       }
     } else {
       if (wait_timeout->sec != 0 || wait_timeout->nsec != 0) {
-        // TODO: zenohpico condvar API does not support timed wait.
+        const size_t wait_timeout_us = rmw_time_to_us(wait_timeout);
+        const z_clock_t clock_start = z_clock_now();
+
         while (!wait_set_data->triggered) {
-          z_condvar_wait(z_loan(wait_set_data->condition_variable),
-                         z_loan(wait_set_data->condition_mutex));
+          const size_t time_elapsed_us = z_clock_elapsed_us(&clock_start);
+          if (time_elapsed_us >= wait_timeout_us) {
+            break;
+          } else {
+            z_condvar_wait_for_us(z_loan(wait_set_data->condition_variable),
+                                  z_loan(wait_set_data->condition_mutex),
+                                  wait_timeout_us - time_elapsed_us);
+          }
         }
       }
     }
