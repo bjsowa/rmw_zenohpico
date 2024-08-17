@@ -6,6 +6,7 @@
 #include "rmw/error_handling.h"
 #include "rmw/validate_namespace.h"
 #include "rmw/validate_node_name.h"
+#include "rmw/rmw.h"
 
 //==============================================================================
 /// Create a node and return a handle to that node.
@@ -111,4 +112,20 @@ rmw_ret_t rmw_destroy_node(rmw_node_t *node) {
   allocator->deallocate(node, allocator->state);
 
   return RMW_RET_OK;
+}
+
+//==============================================================================
+/// Return a guard condition which is triggered when the ROS graph changes.
+const rmw_guard_condition_t *
+rmw_node_get_graph_guard_condition(const rmw_node_t *node) {
+  RMW_CHECK_ARGUMENT_FOR_NULL(node, NULL);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(node, node->implementation_identifier,
+                                   rmw_zenohpico_identifier,
+                                   return NULL);
+
+  RMW_CHECK_ARGUMENT_FOR_NULL(node->context, NULL);
+  RMW_CHECK_ARGUMENT_FOR_NULL(node->context->impl, NULL);
+
+  return node->context->impl->graph_guard_condition;
+  return NULL;
 }

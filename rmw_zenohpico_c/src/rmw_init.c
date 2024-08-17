@@ -5,6 +5,7 @@
 #include "rmw/domain_id.h"
 #include "rmw/error_handling.h"
 #include "rmw/init.h"
+#include "rmw/rmw.h"
 #include "zenoh-pico.h"
 
 //==============================================================================
@@ -52,8 +53,15 @@ rmw_ret_t rmw_init(const rmw_init_options_t* options, rmw_context_t* context) {
     goto fail_session_open;
   }
 
+  context->impl->graph_guard_condition = rmw_create_guard_condition(context);
+  if (context->impl->graph_guard_condition == NULL) {
+    goto fail_create_graph_guard_condition;
+  }
+
   return RMW_RET_OK;
 
+  rmw_destroy_guard_condition(context->impl->graph_guard_condition);
+fail_create_graph_guard_condition:
   z_close(z_move(context->impl->session));
 fail_session_open:
   rmw_init_options_fini(&context->options);
