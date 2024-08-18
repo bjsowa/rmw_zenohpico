@@ -16,6 +16,9 @@ set(SRCS
   src/detail/guard_condition.c
   src/detail/identifiers.c
   src/detail/node.c
+  src/detail/publisher.c
+  src/detail/ros_topic_name_to_zenoh_key.c
+  src/detail/type_support.c
   src/detail/wait_set.c
   src/rmw_features.c
   src/rmw_guard_condition.c
@@ -23,6 +26,7 @@ set(SRCS
   src/rmw_init_options.c
   src/rmw_init.c
   src/rmw_node.c
+  src/rmw_publisher.c
   src/rmw_wait_set.c
   src/rmw_wait.c
 )
