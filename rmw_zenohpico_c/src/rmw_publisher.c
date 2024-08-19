@@ -193,10 +193,16 @@ rmw_publisher_t *rmw_create_publisher(const rmw_node_t *node,
 
   // TODO: Create a Publication Cache if durability is transient_local.
 
-  // TODO: Set congestion_control to BLOCK if appropriate.
+  // Set congestion_control to BLOCK if appropriate.
   z_publisher_options_t opts;
   z_publisher_options_default(&opts);
   opts.congestion_control = Z_CONGESTION_CONTROL_DROP;
+  if (publisher_data->adapted_qos_profile.history ==
+          RMW_QOS_POLICY_HISTORY_KEEP_ALL &&
+      publisher_data->adapted_qos_profile.reliability ==
+          RMW_QOS_POLICY_RELIABILITY_RELIABLE) {
+    opts.congestion_control = Z_CONGESTION_CONTROL_BLOCK;
+  }
 
   if (z_declare_publisher(&publisher_data->pub, z_loan(context_impl->session), z_loan(keyexpr),
                           &opts) < 0) {
