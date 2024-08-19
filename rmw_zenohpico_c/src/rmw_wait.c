@@ -137,15 +137,15 @@ rmw_ret_t rmw_wait(rmw_subscriptions_t *subscriptions, rmw_guard_conditions_t *g
   bool skip_wait = check_and_attach_condition(subscriptions, guard_conditions, services, clients,
                                               events, wait_set_data);
   if (!skip_wait) {
-    z_mutex_lock(z_loan(wait_set_data->condition_mutex));
+    z_mutex_lock(z_loan_mut(wait_set_data->condition_mutex));
 
     // According to the RMW documentation, if wait_timeout is NULL that means
     // "wait forever", if it specified as 0 it means "never wait", and if it is
     // anything else wait for that amount of time.
     if (wait_timeout == NULL) {
       while (!wait_set_data->triggered) {
-        z_condvar_wait(z_loan(wait_set_data->condition_variable),
-                       z_loan(wait_set_data->condition_mutex));
+        z_condvar_wait(z_loan_mut(wait_set_data->condition_variable),
+                       z_loan_mut(wait_set_data->condition_mutex));
       }
     } else {
       if (wait_timeout->sec != 0 || wait_timeout->nsec != 0) {
@@ -157,8 +157,8 @@ rmw_ret_t rmw_wait(rmw_subscriptions_t *subscriptions, rmw_guard_conditions_t *g
           if (time_elapsed_us >= wait_timeout_us) {
             break;
           } else {
-            z_condvar_wait_for_us(z_loan(wait_set_data->condition_variable),
-                                  z_loan(wait_set_data->condition_mutex),
+            z_condvar_wait_for_us(z_loan_mut(wait_set_data->condition_variable),
+                                  z_loan_mut(wait_set_data->condition_mutex),
                                   wait_timeout_us - time_elapsed_us);
           }
         }
@@ -171,7 +171,7 @@ rmw_ret_t rmw_wait(rmw_subscriptions_t *subscriptions, rmw_guard_conditions_t *g
     // in this function and "attaching" it during "check_and_attach_condition",
     // but that isn't clearly better so leaving this.
     wait_set_data->triggered = false;
-    z_mutex_unlock(z_loan(wait_set_data->condition_mutex));
+    z_mutex_unlock(z_loan_mut(wait_set_data->condition_mutex));
   }
 
   bool wait_result = false;

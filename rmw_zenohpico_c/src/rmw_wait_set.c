@@ -1,5 +1,6 @@
 #include "detail/identifiers.h"
 #include "detail/wait_set.h"
+#include "rcutils/macros.h"
 #include "rmw/check_type_identifiers_match.h"
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
@@ -7,6 +8,8 @@
 //==============================================================================
 /// Create a wait set to store conditions that the middleware can wait on.
 rmw_wait_set_t *rmw_create_wait_set(rmw_context_t *context, size_t max_conditions) {
+  RCUTILS_UNUSED(max_conditions);
+
   RCUTILS_CHECK_ARGUMENT_FOR_NULL(context, NULL);
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(context, context->implementation_identifier,
                                    rmw_zenohpico_identifier, return NULL);

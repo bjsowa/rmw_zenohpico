@@ -1,4 +1,5 @@
 #include "detail/identifiers.h"
+#include "detail/macros.h"
 #include "detail/rmw_data_types.h"
 #include "rcutils/strdup.h"
 #include "rmw/check_type_identifiers_match.h"
@@ -60,11 +61,11 @@ rmw_ret_t rmw_init(const rmw_init_options_t* options, rmw_context_t* context) {
 
   return RMW_RET_OK;
 
-  rmw_destroy_guard_condition(context->impl->graph_guard_condition);
+  RMW_UNUSED(rmw_destroy_guard_condition(context->impl->graph_guard_condition))
 fail_create_graph_guard_condition:
   z_close(z_move(context->impl->session));
 fail_session_open:
-  rmw_init_options_fini(&context->options);
+  RMW_UNUSED(rmw_init_options_fini(&context->options))
 fail_init_options_copy:
   allocator->deallocate(context->impl, allocator->state);
 fail_allocate_context:

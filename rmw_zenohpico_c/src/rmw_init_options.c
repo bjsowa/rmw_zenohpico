@@ -54,8 +54,9 @@ rmw_ret_t rmw_init_options_init(rmw_init_options_t* init_options, rcutils_alloca
 fail_z_config_insert:
   z_config_drop(z_move(init_options->impl->config));
   allocator.deallocate(init_options->impl, allocator.state);
-fail_allocate_init_options_impl:
-  rmw_discovery_options_fini(&(init_options->discovery_options));
+fail_allocate_init_options_impl:;
+  rmw_ret_t tmp_ret = rmw_discovery_options_fini(&(init_options->discovery_options));
+  RCUTILS_UNUSED(tmp_ret);
 fail_discovery_options:
   return ret;
 }
@@ -123,8 +124,9 @@ rmw_ret_t rmw_init_options_copy(const rmw_init_options_t* src, rmw_init_options_
 
 fail_allocate_init_options_impl:
   allocator.deallocate(tmp.enclave, allocator.state);
-fail_enclave:
-  rmw_discovery_options_fini(&tmp.discovery_options);
+fail_enclave:;
+  rmw_ret_t tmp_ret = rmw_discovery_options_fini(&tmp.discovery_options);
+  RCUTILS_UNUSED(tmp_ret);
 fail_discovery_options:
   rmw_security_options_fini(&tmp.security_options, &allocator);
 fail_security_options:

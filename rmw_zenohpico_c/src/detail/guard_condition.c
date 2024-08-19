@@ -24,7 +24,7 @@ rmw_ret_t rmw_zenohpico_guard_condition_fini(rmw_zenohpico_guard_condition_t* gu
 }
 
 void rmw_zenohpico_guard_condition_trigger(rmw_zenohpico_guard_condition_t* guard_condition) {
-  z_mutex_lock(z_loan(guard_condition->internal_mutex));
+  z_mutex_lock(z_loan_mut(guard_condition->internal_mutex));
 
   // the change to has_triggered needs to be mutually exclusive with
   // rmw_wait() which checks has_triggered and decides if wait() needs to
@@ -32,20 +32,20 @@ void rmw_zenohpico_guard_condition_trigger(rmw_zenohpico_guard_condition_t* guar
   guard_condition->has_triggered = true;
 
   if (guard_condition->wait_set != NULL) {
-    z_mutex_lock(z_loan(guard_condition->wait_set->condition_mutex));
+    z_mutex_lock(z_loan_mut(guard_condition->wait_set->condition_mutex));
     guard_condition->wait_set->triggered = true;
     // TODO
     // wait_set_data_->triggered = true;
     // wait_set_data_->condition_variable.notify_one();
-    z_mutex_unlock(z_loan(guard_condition->wait_set->condition_mutex));
+    z_mutex_unlock(z_loan_mut(guard_condition->wait_set->condition_mutex));
   }
 
-  z_mutex_unlock(z_loan(guard_condition->internal_mutex));
+  z_mutex_unlock(z_loan_mut(guard_condition->internal_mutex));
 }
 
 bool rmw_zenohpico_guard_condition_check_and_attach_condition_if_not(
     rmw_zenohpico_guard_condition_t* guard_condition, rmw_zenohpico_wait_set_t* wait_set) {
-  z_mutex_lock(z_loan(guard_condition->internal_mutex));
+  z_mutex_lock(z_loan_mut(guard_condition->internal_mutex));
 
   if (guard_condition->has_triggered) {
     return true;
@@ -53,14 +53,14 @@ bool rmw_zenohpico_guard_condition_check_and_attach_condition_if_not(
 
   guard_condition->wait_set = wait_set;
 
-  z_mutex_unlock(z_loan(guard_condition->internal_mutex));
+  z_mutex_unlock(z_loan_mut(guard_condition->internal_mutex));
 
   return false;
 }
 
 bool rmw_zenohpico_guard_condition_detach_condition_and_is_trigger_set(
     rmw_zenohpico_guard_condition_t* guard_condition) {
-  z_mutex_lock(z_loan(guard_condition->internal_mutex));
+  z_mutex_lock(z_loan_mut(guard_condition->internal_mutex));
 
   guard_condition->wait_set = NULL;
 
@@ -68,7 +68,7 @@ bool rmw_zenohpico_guard_condition_detach_condition_and_is_trigger_set(
 
   guard_condition->has_triggered = false;
 
-  z_mutex_unlock(z_loan(guard_condition->internal_mutex));
+  z_mutex_unlock(z_loan_mut(guard_condition->internal_mutex));
 
   return ret;
 }

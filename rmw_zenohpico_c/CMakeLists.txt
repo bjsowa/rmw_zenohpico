@@ -27,6 +27,8 @@ set(SRCS
   src/rmw_init.c
   src/rmw_node.c
   src/rmw_publisher.c
+  src/rmw_publish.c
+  src/rmw_serialize.c
   src/rmw_wait_set.c
   src/rmw_wait.c
 )

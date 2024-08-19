@@ -13,8 +13,8 @@ static const char *create_type_name(const message_type_support_callbacks_t *memb
   }
 
   // Get the number of bytes to allocate
-  size_t type_name_size = rcutils_snprintf(NULL, 0, type_format_str, members->message_namespace_,
-                                           members->message_name_);
+  int type_name_size = rcutils_snprintf(NULL, 0, type_format_str, members->message_namespace_,
+                                        members->message_name_);
 
   char *type_name = (char *)allocator->allocate(type_name_size + 1, allocator->state);
   if (type_name == NULL) {
@@ -22,14 +22,20 @@ static const char *create_type_name(const message_type_support_callbacks_t *memb
     return NULL;
   }
 
-  rcutils_snprintf(type_name, type_name_size + 1, type_format_str, members->message_namespace_,
-                   members->message_name_);
+  int ret = rcutils_snprintf(type_name, type_name_size + 1, type_format_str,
+                             members->message_namespace_, members->message_name_);
+
+  if (ret < 0 || ret > type_name_size) {
+    RMW_SET_ERROR_MSG("failed to create type name string");
+    allocator->deallocate(type_name, allocator->state);
+    return NULL;
+  }
 
   return type_name;
 }
 
 rmw_ret_t rmw_zenohpico_type_support_init(rmw_zenohpico_type_support_t *type_support,
-                                          rosidl_message_type_support_t *message_type_support,
+                                          const rosidl_message_type_support_t *message_type_support,
                                           rcutils_allocator_t *allocator) {
   // TODO: Check type support identifier
   type_support->callbacks = message_type_support->data;
@@ -45,7 +51,7 @@ rmw_ret_t rmw_zenohpico_type_support_init(rmw_zenohpico_type_support_t *type_sup
 rmw_ret_t rmw_zenohpico_type_support_fini(rmw_zenohpico_type_support_t *type_support,
                                           rcutils_allocator_t *allocator) {
   if (type_support->type_name != NULL) {
-    allocator->deallocate(type_support->type_name, allocator->state);
+    allocator->deallocate((char *)type_support->type_name, allocator->state);
   }
 
   return RMW_RET_OK;

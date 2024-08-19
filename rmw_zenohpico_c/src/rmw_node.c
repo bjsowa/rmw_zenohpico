@@ -4,9 +4,9 @@
 #include "rcutils/strdup.h"
 #include "rmw/check_type_identifiers_match.h"
 #include "rmw/error_handling.h"
+#include "rmw/rmw.h"
 #include "rmw/validate_namespace.h"
 #include "rmw/validate_node_name.h"
-#include "rmw/rmw.h"
 
 //==============================================================================
 /// Create a node and return a handle to that node.
@@ -77,9 +77,9 @@ rmw_node_t *rmw_create_node(rmw_context_t *context, const char *name, const char
 fail_init_node_data:
   allocator->deallocate(node_data, allocator->state);
 fail_allocate_node_data:
-  allocator->deallocate(node->namespace_, allocator->state);
+  allocator->deallocate((char *)node->namespace_, allocator->state);
 fail_allocate_node_namespace:
-  allocator->deallocate(node->name, allocator->state);
+  allocator->deallocate((char *)node->name, allocator->state);
 fail_allocate_node_name:
   allocator->deallocate(node, allocator->state);
 fail_allocate_node:
@@ -107,8 +107,8 @@ rmw_ret_t rmw_destroy_node(rmw_node_t *node) {
     allocator->deallocate(node_data, allocator->state);
   }
 
-  allocator->deallocate(node->namespace_, allocator->state);
-  allocator->deallocate(node->name, allocator->state);
+  allocator->deallocate((char *)node->namespace_, allocator->state);
+  allocator->deallocate((char *)node->name, allocator->state);
   allocator->deallocate(node, allocator->state);
 
   return RMW_RET_OK;
@@ -116,11 +116,9 @@ rmw_ret_t rmw_destroy_node(rmw_node_t *node) {
 
 //==============================================================================
 /// Return a guard condition which is triggered when the ROS graph changes.
-const rmw_guard_condition_t *
-rmw_node_get_graph_guard_condition(const rmw_node_t *node) {
+const rmw_guard_condition_t *rmw_node_get_graph_guard_condition(const rmw_node_t *node) {
   RMW_CHECK_ARGUMENT_FOR_NULL(node, NULL);
-  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(node, node->implementation_identifier,
-                                   rmw_zenohpico_identifier,
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(node, node->implementation_identifier, rmw_zenohpico_identifier,
                                    return NULL);
 
   RMW_CHECK_ARGUMENT_FOR_NULL(node->context, NULL);
