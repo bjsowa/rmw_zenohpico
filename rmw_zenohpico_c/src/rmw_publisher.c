@@ -180,7 +180,6 @@ rmw_publisher_t *rmw_create_publisher(const rmw_node_t *node,
     goto fail_allocate_type_hash_c_str;
   }
 
-  // TODO who owns this?
   const char *keyexpr_c_str = ros_topic_name_to_zenoh_key(
       node->context->actual_domain_id, topic_name, publisher_data->type_support->type_name,
       type_hash_c_str, allocator);
@@ -249,12 +248,22 @@ rmw_ret_t rmw_destroy_publisher(rmw_node_t *node, rmw_publisher_t *publisher) {
   rcutils_allocator_t *allocator = &node->context->options.allocator;
   rmw_zenohpico_publisher_t *publisher_data = publisher->data;
 
-  z_undeclare_publisher(z_move(publisher_data->pub));
+  if (z_undeclare_publisher(z_move(publisher_data->pub)) < 0) {
+    RMW_SET_ERROR_MSG("failed to undeclare pub");
+    ret = RMW_RET_ERROR;
+  }
 
-  rmw_zenohpico_type_support_fini(publisher_data->type_support, allocator);
+  if (rmw_zenohpico_type_support_fini(publisher_data->type_support, allocator)) {
+    ret = RMW_RET_ERROR;
+  }
+
   allocator->deallocate(publisher_data->type_support, allocator->state);
   allocator->deallocate((char *)publisher->topic_name, allocator->state);
-  rmw_zenohpico_publisher_fini(publisher_data);
+
+  if (rmw_zenohpico_publisher_fini(publisher_data) != RMW_RET_OK) {
+    ret = RMW_RET_ERROR;
+  }
+
   allocator->deallocate(publisher_data, allocator->state);
   allocator->deallocate(publisher, allocator->state);
 
