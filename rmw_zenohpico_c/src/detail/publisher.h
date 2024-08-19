@@ -13,6 +13,9 @@ typedef struct rmw_zenohpico_publisher_s {
   // An owned publisher.
   z_owned_publisher_t pub;
 
+  // Store the actual QoS profile used to configure this publisher.
+  rmw_qos_profile_t adapted_qos_profile;
+
   // Type support fields
   const void* type_support_impl;
   const char* typesupport_identifier;

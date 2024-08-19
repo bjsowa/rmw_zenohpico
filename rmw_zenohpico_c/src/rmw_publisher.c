@@ -146,6 +146,7 @@ rmw_publisher_t *rmw_create_publisher(const rmw_node_t *node,
   z_random_fill(publisher_data->pub_gid, RMW_GID_STORAGE_SIZE);
 
   // TODO: Adapt any 'best available' QoS options
+  publisher_data->adapted_qos_profile = *qos_profile;
 
   publisher_data->typesupport_identifier = message_type_support->typesupport_identifier;
   publisher_data->type_hash = message_type_support->get_type_hash_func(message_type_support);
@@ -295,10 +296,17 @@ rmw_ret_t rmw_publisher_count_matched_subscriptions(const rmw_publisher_t *publi
 }
 
 rmw_ret_t rmw_publisher_get_actual_qos(const rmw_publisher_t *publisher, rmw_qos_profile_t *qos) {
-  RCUTILS_UNUSED(publisher);
-  RCUTILS_UNUSED(qos);
-  // TODO
-  return RMW_RET_ERROR;
+  RMW_CHECK_ARGUMENT_FOR_NULL(publisher, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(publisher, publisher->implementation_identifier,
+                                   rmw_zenohpico_identifier,
+                                   return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+  RMW_CHECK_ARGUMENT_FOR_NULL(qos, RMW_RET_INVALID_ARGUMENT);
+
+  rmw_zenohpico_publisher_t *pub_data = publisher->data;
+  RMW_CHECK_ARGUMENT_FOR_NULL(pub_data, RMW_RET_INVALID_ARGUMENT);
+
+  *qos = pub_data->adapted_qos_profile;
+  return RMW_RET_OK;
 }
 
 rmw_ret_t rmw_publisher_assert_liveliness(const rmw_publisher_t *publisher) {
