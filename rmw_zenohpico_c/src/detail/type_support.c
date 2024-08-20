@@ -2,8 +2,12 @@
 
 #include "rcutils/snprintf.h"
 #include "rmw/error_handling.h"
+#include "zenoh-pico.h"
+
+#define CDR_ENCAPSULATION_SIZE 4
 
 static const char *const type_format_str = "%s::dds_::%s_";
+const uint8_t cdr_encapsulation[] = {0, 1, 0, 0};
 
 static const char *create_type_name(const message_type_support_callbacks_t *members,
                                     rcutils_allocator_t *allocator) {
@@ -55,4 +59,30 @@ rmw_ret_t rmw_zenohpico_type_support_fini(rmw_zenohpico_type_support_t *type_sup
   }
 
   return RMW_RET_OK;
+}
+
+size_t rmw_zenohpico_type_support_get_serialized_size(rmw_zenohpico_type_support_t *type_support,
+                                                      const void *ros_message) {
+  return CDR_ENCAPSULATION_SIZE + type_support->callbacks->get_serialized_size(ros_message);
+}
+
+rmw_ret_t rmw_zenohpico_type_support_serialize_ros_message(
+    rmw_zenohpico_type_support_t *type_support, const void *ros_message, uint8_t *buf,
+    size_t buf_size) {
+  ucdrBuffer ub;
+
+  memcpy(buf, cdr_encapsulation, CDR_ENCAPSULATION_SIZE);
+
+  ucdr_init_buffer(&ub, &buf[CDR_ENCAPSULATION_SIZE], buf_size - CDR_ENCAPSULATION_SIZE);
+  if (!type_support->callbacks->cdr_serialize(ros_message, &ub)) {
+    RMW_SET_ERROR_MSG("failed to create type name string");
+    return RMW_RET_ERROR;
+  }
+
+  return RMW_RET_OK;
+}
+
+rmw_ret_t rmw_zenohpico_type_support_deserialize_ros_message(
+    rmw_zenohpico_type_support_t *type_support, const uint8_t *buf, void *ros_message) {
+  return RMW_RET_ERROR;
 }
