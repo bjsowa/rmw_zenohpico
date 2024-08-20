@@ -163,6 +163,7 @@ rmw_publisher_t *rmw_create_publisher(const rmw_node_t *node,
     goto fail_init_type_support;
   }
 
+  publisher_data->context = node->context;
   rmw_publisher->data = publisher_data;
   rmw_publisher->implementation_identifier = rmw_zenohpico_identifier;
   rmw_publisher->options = *publisher_options;
