@@ -13,6 +13,7 @@ find_package(zenohpico_vendor REQUIRED)
 find_package(zenohpico REQUIRED)
 
 set(SRCS
+  src/detail/attachment_helpers.c
   src/detail/guard_condition.c
   src/detail/identifiers.c
   src/detail/node.c
