@@ -1,3 +1,4 @@
+#include "detail/attachment_helpers.h"
 #include "detail/identifiers.h"
 #include "detail/publisher.h"
 #include "rmw/check_type_identifiers_match.h"
@@ -36,27 +37,51 @@ rmw_ret_t rmw_publish(const rmw_publisher_t *publisher, const void *ros_message,
     goto fail_serialize_ros_message;
   }
 
-  // TODO: create attachment
+  // create attachment
+  int64_t sequence_number = rmw_zenohpico_publisher_get_next_sequence_number(publisher_data);
+
+  zp_time_since_epoch time_since_epoch;
+  if (zp_get_time_since_epoch(&time_since_epoch) < 0) {
+    RMW_SET_ERROR_MSG("Zenoh-pico port does not support zp_get_time_since_epoch");
+    goto fail_get_time_since_epoch;
+  }
+
+  int64_t source_timestamp =
+      (int64_t)time_since_epoch.secs * 1000000000ll + (int64_t)time_since_epoch.nanos;
+
+  rmw_zenohpico_attachment_data_t attachment_data = {.sequence_number = sequence_number,
+                                                     .source_timestamp = source_timestamp,
+                                                     .source_gid = publisher_data->pub_gid};
+
+  z_owned_bytes_t attachment;
+  if (rmw_zenohpico_attachment_data_serialize_to_zbytes(&attachment_data, &attachment) != RMW_RET_OK) {
+    goto fail_serialize_attachment;
+  }
 
   // The encoding is simply forwarded and is useful when key expressions in the
   // session use different encoding formats. In our case, all key expressions
   // will be encoded with CDR so it does not really matter.
   z_publisher_put_options_t options;
   z_publisher_put_options_default(&options);
-  // options.attachment = z_move(attachment);
+  options.attachment = z_move(attachment);
 
   z_owned_bytes_t payload;
   z_bytes_from_static_buf(&payload, msg_bytes, serialized_size);
 
   if (z_publisher_put(z_loan(publisher_data->pub), z_move(payload), &options)) {
     RMW_SET_ERROR_MSG("unable to publish message");
-    return RMW_RET_ERROR;
+    goto fail_publish_message;
   }
 
+  z_drop(options.attachment);
   allocator->deallocate(msg_bytes, allocator->state);
 
   return RMW_RET_OK;
 
+fail_publish_message:
+  z_drop(options.attachment);
+fail_serialize_attachment:
+fail_get_time_since_epoch:
 fail_serialize_ros_message:
   allocator->deallocate(msg_bytes, allocator->state);
   return RMW_RET_ERROR;
