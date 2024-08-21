@@ -73,7 +73,6 @@ rmw_ret_t rmw_publish(const rmw_publisher_t *publisher, const void *ros_message,
     goto fail_publish_message;
   }
 
-  z_drop(options.attachment);
   allocator->deallocate(msg_bytes, allocator->state);
 
   return RMW_RET_OK;
