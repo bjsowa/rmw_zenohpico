@@ -35,4 +35,6 @@ rmw_ret_t rmw_zenohpico_publisher_init(rmw_zenohpico_publisher_t* publisher);
 
 rmw_ret_t rmw_zenohpico_publisher_fini(rmw_zenohpico_publisher_t* publisher);
 
+size_t rmw_zenohpico_publisher_get_next_sequence_number(rmw_zenohpico_publisher_t* publisher);
+
 #endif

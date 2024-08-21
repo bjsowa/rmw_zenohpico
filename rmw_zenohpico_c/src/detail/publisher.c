@@ -19,3 +19,10 @@ rmw_ret_t rmw_zenohpico_publisher_fini(rmw_zenohpico_publisher_t* publisher) {
 
   return RMW_RET_OK;
 }
+
+size_t rmw_zenohpico_publisher_get_next_sequence_number(rmw_zenohpico_publisher_t* publisher) {
+  z_mutex_lock(z_loan_mut(publisher->sequence_number_mutex));
+  size_t seq = publisher->sequence_number++;
+  z_mutex_unlock(z_loan_mut(publisher->sequence_number_mutex));
+  return seq;
+}
