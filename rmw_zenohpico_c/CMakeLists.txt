@@ -19,8 +19,11 @@ set(SRCS
   src/detail/node.c
   src/detail/publisher.c
   src/detail/ros_topic_name_to_zenoh_key.c
+  src/detail/subscription.c
   src/detail/type_support.c
   src/detail/wait_set.c
+  src/rmw_dynamic_message_type_support.c
+  src/rmw_event_callbacks.c
   src/rmw_features.c
   src/rmw_guard_condition.c
   src/rmw_identifiers.c
@@ -30,6 +33,8 @@ set(SRCS
   src/rmw_publisher.c
   src/rmw_publish.c
   src/rmw_serialize.c
+  src/rmw_subscription.c
+  src/rmw_take.c
   src/rmw_wait_set.c
   src/rmw_wait.c
 )
