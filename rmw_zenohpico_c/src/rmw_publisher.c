@@ -31,44 +31,6 @@ rmw_ret_t rmw_fini_publisher_allocation(rmw_publisher_allocation_t *allocation) 
 }
 
 //==============================================================================
-static const rosidl_message_type_support_t *find_message_type_support(
-    const rosidl_message_type_support_t *type_supports) {
-  const rosidl_message_type_support_t *type_support =
-      get_message_typesupport_handle(type_supports, RMW_ZENOHPICO_C_TYPESUPPORT_C);
-  if (!type_support) {
-    rcutils_error_string_t error_string = rcutils_get_error_string();
-    rcutils_reset_error();
-    RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
-        "Type support not from this implementation. Got:\n"
-        "    %s\n"
-        "while fetching it",
-        error_string.str);
-    return NULL;
-  }
-
-  return type_support;
-}
-
-//==============================================================================
-static const rosidl_service_type_support_t *find_service_type_support(
-    const rosidl_service_type_support_t *type_supports) {
-  const rosidl_service_type_support_t *type_support =
-      get_service_typesupport_handle(type_supports, RMW_ZENOHPICO_C_TYPESUPPORT_C);
-  if (!type_support) {
-    rcutils_error_string_t error_string = rcutils_get_error_string();
-    rcutils_reset_error();
-    RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
-        "Type support not from this implementation. Got:\n"
-        "    %s\n"
-        "while fetching it",
-        error_string.str);
-    return NULL;
-  }
-
-  return type_support;
-}
-
-//==============================================================================
 /// Create a publisher and return a handle to that publisher.
 rmw_publisher_t *rmw_create_publisher(const rmw_node_t *node,
                                       const rosidl_message_type_support_t *type_supports,
@@ -112,7 +74,7 @@ rmw_publisher_t *rmw_create_publisher(const rmw_node_t *node,
 
   // Get the RMW type support.
   const rosidl_message_type_support_t *message_type_support =
-      find_message_type_support(type_supports);
+      rmw_zenohpico_find_message_type_support(type_supports);
   if (message_type_support == NULL) {
     // error was already set by find_message_type_support
     return NULL;
@@ -198,10 +160,8 @@ rmw_publisher_t *rmw_create_publisher(const rmw_node_t *node,
   z_publisher_options_t opts;
   z_publisher_options_default(&opts);
   opts.congestion_control = Z_CONGESTION_CONTROL_DROP;
-  if (publisher_data->adapted_qos_profile.history ==
-          RMW_QOS_POLICY_HISTORY_KEEP_ALL &&
-      publisher_data->adapted_qos_profile.reliability ==
-          RMW_QOS_POLICY_RELIABILITY_RELIABLE) {
+  if (publisher_data->adapted_qos_profile.history == RMW_QOS_POLICY_HISTORY_KEEP_ALL &&
+      publisher_data->adapted_qos_profile.reliability == RMW_QOS_POLICY_RELIABILITY_RELIABLE) {
     opts.congestion_control = Z_CONGESTION_CONTROL_BLOCK;
   }
 
