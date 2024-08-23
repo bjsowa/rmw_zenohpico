@@ -30,7 +30,7 @@ static bool create_attachment_iter(z_owned_bytes_t *kv_pair, void *context) {
 }
 
 rmw_ret_t rmw_zenohpico_attachment_data_serialize_to_zbytes(
-    rmw_zenohpico_attachment_data_t *attachment_data, z_owned_bytes_t *attachment) {
+    const rmw_zenohpico_attachment_data_t *attachment_data, z_owned_bytes_t *attachment) {
   attachment_context_t context = {.data = attachment_data, .idx = 0};
 
   if (z_bytes_from_iter(attachment, create_attachment_iter, (void *)&context) < 0) {
@@ -39,4 +39,17 @@ rmw_ret_t rmw_zenohpico_attachment_data_serialize_to_zbytes(
   };
 
   return RMW_RET_OK;
+}
+
+rmw_ret_t rmw_zenohpico_attachment_data_deserialize_from_zbytes(
+    const z_loaned_bytes_t *attachment, rmw_zenohpico_attachment_data_t *attachment_data) {
+  attachment_data->sequence_number = 0;
+  attachment_data->source_timestamp = 0;
+  memset(attachment_data->source_gid, 0, RMW_GID_STORAGE_SIZE);
+
+  // TODO: Attachments in rmw_zenoh right now are only used to detect lost messages by checking if
+  // sequence numbers associated with publisher GID are monotonically increasing. Do we need to
+  // implement this in rmw_zenohpico?
+
+  return RMW_RET_ERROR;
 }

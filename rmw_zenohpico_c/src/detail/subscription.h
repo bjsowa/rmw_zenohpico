@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 
+#include "./attachment_helpers.h"
 #include "./type_support.h"
 #include "rmw/ret_types.h"
 #include "rmw/types.h"
@@ -29,6 +30,10 @@ rmw_ret_t rmw_zenohpico_subscription_init(rmw_zenohpico_subscription_t* subscrip
 
 rmw_ret_t rmw_zenohpico_subscription_fini(rmw_zenohpico_subscription_t* subscription);
 
-void rmw_zenohpico_sub_data_handler(const z_loaned_sample_t * sample, void * sub_data);
+void rmw_zenohpico_sub_data_handler(const z_loaned_sample_t* sample, void* data);
+
+rmw_ret_t rmw_zenohpico_subscription_add_new_message(
+    rmw_zenohpico_subscription_t* subscription,
+    const rmw_zenohpico_attachment_data_t* attachment_data, z_moved_slice_t payload);
 
 #endif

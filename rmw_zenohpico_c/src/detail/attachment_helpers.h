@@ -13,6 +13,9 @@ typedef struct rmw_zenohpico_attachment_data_s {
 } rmw_zenohpico_attachment_data_t;
 
 rmw_ret_t rmw_zenohpico_attachment_data_serialize_to_zbytes(
-    rmw_zenohpico_attachment_data_t* attachment_data, z_owned_bytes_t* attachment);
+    const rmw_zenohpico_attachment_data_t* attachment_data, z_owned_bytes_t* attachment);
+
+rmw_ret_t rmw_zenohpico_attachment_data_deserialize_from_zbytes(
+    const z_loaned_bytes_t* attachment, rmw_zenohpico_attachment_data_t* attachment_data);
 
 #endif
