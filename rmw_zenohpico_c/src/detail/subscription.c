@@ -11,7 +11,6 @@ rmw_ret_t rmw_zenohpico_subscription_init(rmw_zenohpico_subscription_t* subscrip
                                           rcutils_allocator_t* allocator) {
   subscription->adapted_qos_profile = *qos_profile;
   if (rmw_zenohpico_adapt_qos_profile(&subscription->adapted_qos_profile) != RMW_RET_OK) {
-    RMW_SET_ERROR_MSG("Failed to adapt qos profile");
     return RMW_RET_ERROR;
   }
 
@@ -86,11 +85,26 @@ void rmw_zenohpico_sub_data_handler(const z_loaned_sample_t* sample, void* data)
 rmw_ret_t rmw_zenohpico_subscription_add_new_message(
     rmw_zenohpico_subscription_t* subscription, rmw_zenohpico_attachment_data_t* attachment_data,
     z_moved_slice_t payload) {
-  RCUTILS_UNUSED(subscription);
   RCUTILS_UNUSED(attachment_data);
-  RCUTILS_UNUSED(payload);
 
-  // TODO
+  z_mutex_lock(z_loan_mut(subscription->message_queue_mutex));
 
-  return RMW_RET_UNSUPPORTED;
+  if (subscription->message_queue.size >= subscription->adapted_qos_profile.depth) {
+    // TODO: Log warning if message is discarded due to hitting the queue depth
+
+    // Adapted QoS has depth guaranteed to be >= 1
+    if (rmw_zenohpico_message_queue_pop_front(&subscription->message_queue) != RMW_RET_OK) {
+      z_mutex_unlock(z_loan_mut(subscription->message_queue_mutex));
+      return RMW_RET_ERROR;
+    }
+  }
+
+  if (rmw_zenohpico_message_queue_push_back(&subscription->message_queue, payload) != RMW_RET_OK) {
+    z_mutex_unlock(z_loan_mut(subscription->message_queue_mutex));
+    return RMW_RET_ERROR;
+  }
+
+  z_mutex_unlock(z_loan_mut(subscription->message_queue_mutex));
+
+  return RMW_RET_OK;
 }
