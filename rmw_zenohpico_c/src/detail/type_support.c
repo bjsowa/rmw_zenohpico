@@ -95,11 +95,12 @@ rmw_ret_t rmw_zenohpico_type_support_deserialize_ros_message(
   return RMW_RET_ERROR;
 }
 
-const rosidl_message_type_support_t *find_message_type_support(
-    const rosidl_message_type_support_t *type_supports) {
-  const rosidl_message_type_support_t *type_support =
+rmw_ret_t rmw_zenohpico_find_message_type_support(
+    const rosidl_message_type_support_t *type_supports,
+    rosidl_message_type_support_t const **message_type_support) {
+  *message_type_support =
       get_message_typesupport_handle(type_supports, RMW_ZENOHPICO_C_TYPESUPPORT_C);
-  if (!type_support) {
+  if (!message_type_support) {
     rcutils_error_string_t error_string = rcutils_get_error_string();
     rcutils_reset_error();
     RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
@@ -107,17 +108,18 @@ const rosidl_message_type_support_t *find_message_type_support(
         "    %s\n"
         "while fetching it",
         error_string.str);
-    return NULL;
+    return RMW_RET_ERROR;
   }
 
-  return type_support;
+  return RMW_RET_OK;
 }
 
-const rosidl_service_type_support_t *find_service_type_support(
-    const rosidl_service_type_support_t *type_supports) {
-  const rosidl_service_type_support_t *type_support =
+rmw_ret_t rmw_zenohpico_find_service_type_support(
+    const rosidl_service_type_support_t *type_supports,
+    rosidl_service_type_support_t const **service_type_support) {
+  *service_type_support =
       get_service_typesupport_handle(type_supports, RMW_ZENOHPICO_C_TYPESUPPORT_C);
-  if (!type_support) {
+  if (!service_type_support) {
     rcutils_error_string_t error_string = rcutils_get_error_string();
     rcutils_reset_error();
     RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
@@ -125,8 +127,8 @@ const rosidl_service_type_support_t *find_service_type_support(
         "    %s\n"
         "while fetching it",
         error_string.str);
-    return NULL;
+    return RMW_RET_ERROR;
   }
 
-  return type_support;
+  return RMW_RET_OK;
 }

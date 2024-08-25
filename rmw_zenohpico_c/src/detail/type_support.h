@@ -31,10 +31,12 @@ rmw_ret_t rmw_zenohpico_type_support_serialize_ros_message(
 rmw_ret_t rmw_zenohpico_type_support_deserialize_ros_message(
     rmw_zenohpico_type_support_t *type_support, const uint8_t *buf, void *ros_message);
 
-const rosidl_message_type_support_t *rmw_zenohpico_find_message_type_support(
-    const rosidl_message_type_support_t *type_supports);
+rmw_ret_t rmw_zenohpico_find_message_type_support(
+    const rosidl_message_type_support_t *type_supports,
+    rosidl_message_type_support_t const **message_type_support);
 
-const rosidl_service_type_support_t *rmw_zenohpico_find_service_type_support(
-    const rosidl_service_type_support_t *type_supports);
+rmw_ret_t rmw_zenohpico_find_service_type_support(
+    const rosidl_service_type_support_t *type_supports,
+    rosidl_service_type_support_t const **service_type_support);
 
 #endif

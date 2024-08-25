@@ -73,9 +73,8 @@ rmw_publisher_t *rmw_create_publisher(const rmw_node_t *node,
   RMW_CHECK_ARGUMENT_FOR_NULL(node_data, NULL);
 
   // Get the RMW type support.
-  const rosidl_message_type_support_t *message_type_support =
-      rmw_zenohpico_find_message_type_support(type_supports);
-  if (message_type_support == NULL) {
+  const rosidl_message_type_support_t *message_type_support;
+  if (rmw_zenohpico_find_message_type_support(type_supports, &message_type_support) != RMW_RET_OK) {
     // error was already set by find_message_type_support
     return NULL;
   }

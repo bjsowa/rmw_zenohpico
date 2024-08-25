@@ -39,9 +39,8 @@ rmw_subscription_t* rmw_create_subscription(
   RMW_CHECK_ARGUMENT_FOR_NULL(subscription_options, NULL);
 
   // Get the RMW type support.
-  const rosidl_message_type_support_t* message_type_support =
-      rmw_zenohpico_find_message_type_support(type_supports);
-  if (message_type_support == NULL) {
+  const rosidl_message_type_support_t* message_type_support;
+  if (rmw_zenohpico_find_message_type_support(type_supports, &message_type_support) != RMW_RET_OK) {
     // error was already set by find_message_type_support
     return NULL;
   }
@@ -94,6 +93,7 @@ rmw_subscription_t* rmw_create_subscription(
 
   sub_data->context = node->context;
 
+  rmw_subscription->data = sub_data;
   rmw_subscription->implementation_identifier = rmw_zenohpico_identifier;
 
   rmw_subscription->topic_name = rcutils_strdup(topic_name, *allocator);
