@@ -1,5 +1,7 @@
 #include "./qos.h"
 
+#include "rmw/error_handling.h"
+
 // Define defaults for various QoS settings.
 #define RMW_ZENOHPICO_DEFAULT_HISTORY RMW_QOS_POLICY_HISTORY_KEEP_LAST;
 // If the depth field in the qos profile is set to 0, the RMW implementation
@@ -23,6 +25,10 @@ rmw_ret_t rmw_zenohpico_adapt_qos_profile(rmw_qos_profile_t *qos_profile) {
     case RMW_QOS_POLICY_HISTORY_SYSTEM_DEFAULT:
     case RMW_QOS_POLICY_HISTORY_UNKNOWN:
       qos_profile->history = RMW_ZENOHPICO_DEFAULT_HISTORY;
+      break;
+    case RMW_QOS_POLICY_HISTORY_KEEP_ALL:
+      RMW_SET_ERROR_MSG("rmw_zenohpico does not support QoS history policy: Keep all");
+      return RMW_RET_ERROR;
     default:
       break;
   }
