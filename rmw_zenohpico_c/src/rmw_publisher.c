@@ -101,14 +101,11 @@ rmw_publisher_t *rmw_create_publisher(const rmw_node_t *node,
   RMW_CHECK_FOR_NULL_WITH_MSG(publisher_data, "failed to allocate memory for publisher data",
                               goto fail_allocate_publisher_data);
 
-  if (rmw_zenohpico_publisher_init(publisher_data) != RMW_RET_OK) {
+  if (rmw_zenohpico_publisher_init(publisher_data, qos_profile) != RMW_RET_OK) {
     goto fail_init_publisher_data;
   }
 
   z_random_fill(publisher_data->pub_gid, RMW_GID_STORAGE_SIZE);
-
-  // TODO: Adapt any 'best available' QoS options
-  publisher_data->adapted_qos_profile = *qos_profile;
 
   publisher_data->typesupport_identifier = message_type_support->typesupport_identifier;
   publisher_data->type_hash = message_type_support->get_type_hash_func(message_type_support);

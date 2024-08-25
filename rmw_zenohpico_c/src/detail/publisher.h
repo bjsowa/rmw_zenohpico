@@ -31,7 +31,8 @@ typedef struct rmw_zenohpico_publisher_s {
   size_t sequence_number;
 } rmw_zenohpico_publisher_t;
 
-rmw_ret_t rmw_zenohpico_publisher_init(rmw_zenohpico_publisher_t* publisher);
+rmw_ret_t rmw_zenohpico_publisher_init(rmw_zenohpico_publisher_t* publisher,
+                                       const rmw_qos_profile_t* qos_profile);
 
 rmw_ret_t rmw_zenohpico_publisher_fini(rmw_zenohpico_publisher_t* publisher);
 
