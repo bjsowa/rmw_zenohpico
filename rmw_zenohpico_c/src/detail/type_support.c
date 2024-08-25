@@ -3,6 +3,7 @@
 #include "./identifiers.h"
 #include "rcutils/snprintf.h"
 #include "rmw/error_handling.h"
+#include "rmw/macros.h"
 #include "zenoh-pico.h"
 
 #define CDR_ENCAPSULATION_SIZE 4
@@ -85,6 +86,12 @@ rmw_ret_t rmw_zenohpico_type_support_serialize_ros_message(
 
 rmw_ret_t rmw_zenohpico_type_support_deserialize_ros_message(
     rmw_zenohpico_type_support_t *type_support, const uint8_t *buf, void *ros_message) {
+  RCUTILS_UNUSED(type_support);
+  RCUTILS_UNUSED(buf);
+  RCUTILS_UNUSED(ros_message);
+
+  // TODO
+
   return RMW_RET_ERROR;
 }
 

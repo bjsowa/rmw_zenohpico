@@ -50,11 +50,12 @@ rmw_ret_t rmw_publish(const rmw_publisher_t *publisher, const void *ros_message,
       (int64_t)time_since_epoch.secs * 1000000000ll + (int64_t)time_since_epoch.nanos;
 
   rmw_zenohpico_attachment_data_t attachment_data = {.sequence_number = sequence_number,
-                                                     .source_timestamp = source_timestamp,
-                                                     .source_gid = publisher_data->pub_gid};
+                                                     .source_timestamp = source_timestamp};
+  memcpy(attachment_data.source_gid, publisher_data->pub_gid, RMW_GID_STORAGE_SIZE);
 
   z_owned_bytes_t attachment;
-  if (rmw_zenohpico_attachment_data_serialize_to_zbytes(&attachment_data, &attachment) != RMW_RET_OK) {
+  if (rmw_zenohpico_attachment_data_serialize_to_zbytes(&attachment_data, &attachment) !=
+      RMW_RET_OK) {
     goto fail_serialize_attachment;
   }
 

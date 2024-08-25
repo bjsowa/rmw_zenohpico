@@ -1,5 +1,6 @@
 #include "./attachment_helpers.h"
 
+#include "rcutils/macros.h"
 #include "rmw/error_handling.h"
 
 typedef struct attachment_context_s {
@@ -43,6 +44,7 @@ rmw_ret_t rmw_zenohpico_attachment_data_serialize_to_zbytes(
 
 rmw_ret_t rmw_zenohpico_attachment_data_deserialize_from_zbytes(
     const z_loaned_bytes_t *attachment, rmw_zenohpico_attachment_data_t *attachment_data) {
+  RCUTILS_UNUSED(attachment);
   attachment_data->sequence_number = 0;
   attachment_data->source_timestamp = 0;
   memset(attachment_data->source_gid, 0, RMW_GID_STORAGE_SIZE);
