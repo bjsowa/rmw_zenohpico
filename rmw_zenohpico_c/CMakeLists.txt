@@ -16,8 +16,10 @@ set(SRCS
   src/detail/attachment_helpers.c
   src/detail/guard_condition.c
   src/detail/identifiers.c
+  src/detail/message_queue.c
   src/detail/node.c
   src/detail/publisher.c
+  src/detail/qos.c
   src/detail/ros_topic_name_to_zenoh_key.c
   src/detail/subscription.c
   src/detail/type_support.c
