@@ -4,6 +4,7 @@
 #include "detail/ros_topic_name_to_zenoh_key.h"
 #include "detail/subscription.h"
 #include "detail/type_support.h"
+#include "rcutils/strdup.h"
 #include "rmw/check_type_identifiers_match.h"
 #include "rmw/rmw.h"
 
@@ -73,12 +74,9 @@ rmw_subscription_t* rmw_create_subscription(
   RMW_CHECK_FOR_NULL_WITH_MSG(sub_data, "failed to allocate memory for subscription data",
                               goto fail_allocate_subscription_data);
 
-  if (rmw_zenohpico_subscription_init(sub_data) != RMW_RET_OK) {
+  if (rmw_zenohpico_subscription_init(sub_data, qos_profile, allocator) != RMW_RET_OK) {
     goto fail_init_subscription_data;
   }
-
-  // TODO: Adapt any 'best available' QoS options
-  sub_data->adapted_qos_profile = *qos_profile;
 
   sub_data->typesupport_identifier = message_type_support->typesupport_identifier;
   sub_data->type_hash = message_type_support->get_type_hash_func(message_type_support);
@@ -137,7 +135,6 @@ rmw_subscription_t* rmw_create_subscription(
     sub_options.reliability = Z_RELIABILITY_RELIABLE;
   }
 
-  z_owned_subscriber_t sub;
   if (z_declare_subscriber(&sub_data->sub, z_loan(context_impl->session), z_loan(keyexpr),
                            z_move(callback), &sub_options)) {
     RMW_SET_ERROR_MSG("unable to create zenoh subscription");
@@ -147,7 +144,7 @@ rmw_subscription_t* rmw_create_subscription(
   allocator->deallocate((char*)keyexpr_c_str, allocator->state);
   allocator->deallocate(type_hash_c_str, allocator->state);
 
-  return RMW_RET_OK;
+  return rmw_subscription;
 
   z_undeclare_subscriber(z_move(sub_data->sub));
 fail_create_zenoh_subscription:
@@ -161,12 +158,12 @@ fail_allocate_topic_name:
 fail_init_type_support:
   allocator->deallocate(sub_data->type_support, allocator->state);
 fail_allocate_type_support:
-  rmw_zenohpico_subscription_fini(sub_data);
+  rmw_zenohpico_subscription_fini(sub_data, allocator);
 fail_init_subscription_data:
   allocator->deallocate(sub_data, allocator->state);
 fail_allocate_subscription_data:
   allocator->deallocate(rmw_subscription, allocator->state);
-  return RMW_RET_ERROR;
+  return NULL;
 }
 
 rmw_ret_t rmw_destroy_subscription(rmw_node_t* node, rmw_subscription_t* subscription) {
@@ -196,14 +193,14 @@ rmw_ret_t rmw_destroy_subscription(rmw_node_t* node, rmw_subscription_t* subscri
 
   allocator->deallocate(sub_data->type_support, allocator->state);
 
-  if (rmw_zenohpico_subscription_fini(sub_data) != RMW_RET_OK) {
+  if (rmw_zenohpico_subscription_fini(sub_data, allocator) != RMW_RET_OK) {
     ret = RMW_RET_ERROR;
   }
 
   allocator->deallocate(sub_data, allocator->state);
   allocator->deallocate(subscription, allocator->state);
 
-  return RMW_RET_UNSUPPORTED;
+  return ret;
 }
 
 rmw_ret_t rmw_subscription_count_matched_publishers(const rmw_subscription_t* subscription,
