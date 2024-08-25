@@ -9,7 +9,6 @@ rmw_ret_t rmw_zenohpico_publisher_init(rmw_zenohpico_publisher_t* publisher,
   publisher->adapted_qos_profile = *qos_profile;
 
   if (rmw_zenohpico_adapt_qos_profile(&publisher->adapted_qos_profile) != RMW_RET_OK) {
-    RMW_SET_ERROR_MSG("Failed to adapt qos profile");
     return RMW_RET_ERROR;
   }
 
