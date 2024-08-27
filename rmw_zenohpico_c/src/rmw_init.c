@@ -59,8 +59,22 @@ rmw_ret_t rmw_init(const rmw_init_options_t* options, rmw_context_t* context) {
     goto fail_create_graph_guard_condition;
   }
 
+  if (zp_start_read_task(z_loan_mut(context->impl->session), NULL) < 0) {
+    RMW_SET_ERROR_MSG("Failed to start zenoh-pico read task");
+    goto fail_start_read_task;
+  }
+
+  if (zp_start_lease_task(z_loan_mut(context->impl->session), NULL) < 0) {
+    RMW_SET_ERROR_MSG("Failed to start zenoh-pico lease task");
+    goto fail_start_lease_task;
+  }
+
   return RMW_RET_OK;
 
+  zp_stop_lease_task(z_loan_mut(context->impl->session));
+fail_start_lease_task:
+  zp_stop_lease_task(z_loan_mut(context->impl->session));
+fail_start_read_task:
   RMW_UNUSED(rmw_destroy_guard_condition(context->impl->graph_guard_condition))
 fail_create_graph_guard_condition:
   z_close(z_move(context->impl->session));
@@ -83,15 +97,27 @@ rmw_ret_t rmw_shutdown(rmw_context_t* context) {
                                    rmw_zenohpico_identifier,
                                    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
 
+  rmw_ret_t ret = RMW_RET_OK;
+
+  if (zp_stop_lease_task(z_loan_mut(context->impl->session)) < 0) {
+    RMW_SET_ERROR_MSG("Failed to stop zenoh-pico lease task");
+    ret = RMW_RET_ERROR;
+  }
+
+  if (zp_stop_read_task(z_loan_mut(context->impl->session)) < 0) {
+    RMW_SET_ERROR_MSG("Failed to stop zenoh-pico read task");
+    ret = RMW_RET_ERROR;
+  }
+
   // Close the zenoh session
   if (z_close(z_move(context->impl->session)) < 0) {
     RMW_SET_ERROR_MSG("Error while closing zenoh session");
-    return RMW_RET_ERROR;
+    ret = RMW_RET_ERROR;
   }
 
   context->impl->is_shutdown = true;
 
-  return RMW_RET_OK;
+  return ret;
 }
 
 //==============================================================================
