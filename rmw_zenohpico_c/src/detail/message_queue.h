@@ -19,7 +19,8 @@ rmw_ret_t rmw_zenohpico_message_queue_init(rmw_zenohpico_message_queue_t *messag
 rmw_ret_t rmw_zenohpico_message_queue_fini(rmw_zenohpico_message_queue_t *message_queue,
                                            rcutils_allocator_t *allocator);
 
-rmw_ret_t rmw_zenohpico_message_queue_pop_front(rmw_zenohpico_message_queue_t *message_queue);
+rmw_ret_t rmw_zenohpico_message_queue_pop_front(rmw_zenohpico_message_queue_t *message_queue,
+                                                z_owned_slice_t *msg_data);
 
 rmw_ret_t rmw_zenohpico_message_queue_push_back(rmw_zenohpico_message_queue_t *message_queue,
                                                 z_moved_slice_t payload);

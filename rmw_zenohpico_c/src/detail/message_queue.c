@@ -27,13 +27,19 @@ rmw_ret_t rmw_zenohpico_message_queue_fini(rmw_zenohpico_message_queue_t *messag
   return RMW_RET_OK;
 }
 
-rmw_ret_t rmw_zenohpico_message_queue_pop_front(rmw_zenohpico_message_queue_t *message_queue) {
+rmw_ret_t rmw_zenohpico_message_queue_pop_front(rmw_zenohpico_message_queue_t *message_queue,
+                                                z_owned_slice_t *msg_data) {
   if (message_queue->size == 0) {
     RMW_SET_ERROR_MSG("Trying to pop messages from empty queue");
     return RMW_RET_ERROR;
   }
 
-  z_drop(z_move(message_queue->messages[message_queue->idx_front]));
+  z_moved_slice_t msg_moved = z_move(message_queue->messages[message_queue->idx_front]);
+  if (msg_data == NULL) {
+    z_drop(msg_moved);
+  } else {
+    z_take(msg_data, msg_moved);
+  }
 
   message_queue->size--;
   message_queue->idx_front++;

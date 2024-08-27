@@ -43,4 +43,7 @@ rmw_ret_t rmw_zenohpico_subscription_add_new_message(
     rmw_zenohpico_subscription_t* subscription, rmw_zenohpico_attachment_data_t* attachment_data,
     z_moved_slice_t payload);
 
+rmw_ret_t rmw_zenohpico_subscription_pop_next_message(rmw_zenohpico_subscription_t* subscription,
+                                                      z_owned_slice_t* msg_data);
+
 #endif

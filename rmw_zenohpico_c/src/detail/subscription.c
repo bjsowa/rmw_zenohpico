@@ -93,13 +93,33 @@ rmw_ret_t rmw_zenohpico_subscription_add_new_message(
     // TODO: Log warning if message is discarded due to hitting the queue depth
 
     // Adapted QoS has depth guaranteed to be >= 1
-    if (rmw_zenohpico_message_queue_pop_front(&subscription->message_queue) != RMW_RET_OK) {
+    if (rmw_zenohpico_message_queue_pop_front(&subscription->message_queue, NULL) != RMW_RET_OK) {
       z_mutex_unlock(z_loan_mut(subscription->message_queue_mutex));
       return RMW_RET_ERROR;
     }
   }
 
   if (rmw_zenohpico_message_queue_push_back(&subscription->message_queue, payload) != RMW_RET_OK) {
+    z_mutex_unlock(z_loan_mut(subscription->message_queue_mutex));
+    return RMW_RET_ERROR;
+  }
+
+  z_mutex_unlock(z_loan_mut(subscription->message_queue_mutex));
+
+  return RMW_RET_OK;
+}
+
+rmw_ret_t rmw_zenohpico_subscription_pop_next_message(rmw_zenohpico_subscription_t* subscription,
+                                                      z_owned_slice_t* msg_data) {
+  z_mutex_lock(z_loan_mut(subscription->message_queue_mutex));
+
+  if (subscription->message_queue.size == 0) {
+    RMW_SET_ERROR_MSG("Trying to pop message from empty message queue");
+    z_mutex_unlock(z_loan_mut(subscription->message_queue_mutex));
+    return RMW_RET_ERROR;
+  }
+
+  if (rmw_zenohpico_message_queue_pop_front(&subscription->message_queue, msg_data) != RMW_RET_OK) {
     z_mutex_unlock(z_loan_mut(subscription->message_queue_mutex));
     return RMW_RET_ERROR;
   }
