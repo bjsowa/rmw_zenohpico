@@ -34,7 +34,7 @@ rmw_ret_t rmw_zenohpico_message_queue_pop_front(rmw_zenohpico_message_queue_t *m
     return RMW_RET_ERROR;
   }
 
-  z_moved_slice_t msg_moved = z_move(message_queue->messages[message_queue->idx_front]);
+  z_moved_slice_t *msg_moved = z_move(message_queue->messages[message_queue->idx_front]);
   if (msg_data == NULL) {
     z_drop(msg_moved);
   } else {
@@ -51,7 +51,7 @@ rmw_ret_t rmw_zenohpico_message_queue_pop_front(rmw_zenohpico_message_queue_t *m
 }
 
 rmw_ret_t rmw_zenohpico_message_queue_push_back(rmw_zenohpico_message_queue_t *message_queue,
-                                                z_moved_slice_t payload) {
+                                                z_moved_slice_t *payload) {
   if (message_queue->size == message_queue->capacity) {
     RMW_SET_ERROR_MSG("Trying to push messages to a queue that is full");
     return RMW_RET_ERROR;

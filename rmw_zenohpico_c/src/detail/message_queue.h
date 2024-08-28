@@ -23,6 +23,6 @@ rmw_ret_t rmw_zenohpico_message_queue_pop_front(rmw_zenohpico_message_queue_t *m
                                                 z_owned_slice_t *msg_data);
 
 rmw_ret_t rmw_zenohpico_message_queue_push_back(rmw_zenohpico_message_queue_t *message_queue,
-                                                z_moved_slice_t payload);
+                                                z_moved_slice_t *payload);
 
 #endif
