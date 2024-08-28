@@ -17,10 +17,10 @@ static rmw_ret_t take_one(rmw_zenohpico_subscription_t* sub_data, void* ros_mess
   }
 
   const uint8_t* payload = z_slice_data(z_loan(msg_data));
-  // const size_t payload_len = z_slice_len(z_loan(msg_data));
+  const size_t payload_len = z_slice_len(z_loan(msg_data));
 
   if (rmw_zenohpico_type_support_deserialize_ros_message(sub_data->type_support, payload,
-                                                         ros_message) != RMW_RET_OK) {
+                                                         payload_len, ros_message) != RMW_RET_OK) {
     z_drop(z_move(msg_data));
     return RMW_RET_ERROR;
   }

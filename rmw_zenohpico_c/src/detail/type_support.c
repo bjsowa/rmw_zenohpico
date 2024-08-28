@@ -6,10 +6,10 @@
 #include "rmw/macros.h"
 #include "zenoh-pico.h"
 
-#define CDR_ENCAPSULATION_SIZE 4
+#define CDR_HEADER_SIZE 4
 
 static const char *const type_format_str = "%s::dds_::%s_";
-const uint8_t cdr_encapsulation[] = {0, 1, 0, 0};
+// const uint8_t cdr_header[] = {0, 1, 0, 0};
 
 static const char *create_type_name(const message_type_support_callbacks_t *members,
                                     rcutils_allocator_t *allocator) {
@@ -65,19 +65,30 @@ rmw_ret_t rmw_zenohpico_type_support_fini(rmw_zenohpico_type_support_t *type_sup
 
 size_t rmw_zenohpico_type_support_get_serialized_size(rmw_zenohpico_type_support_t *type_support,
                                                       const void *ros_message) {
-  return CDR_ENCAPSULATION_SIZE + type_support->callbacks->get_serialized_size(ros_message);
+  return CDR_HEADER_SIZE + type_support->callbacks->get_serialized_size(ros_message);
 }
 
 rmw_ret_t rmw_zenohpico_type_support_serialize_ros_message(
     rmw_zenohpico_type_support_t *type_support, const void *ros_message, uint8_t *buf,
     size_t buf_size) {
+  if (buf_size < CDR_HEADER_SIZE) {
+    RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
+        "Cannot serialize the message into buffer of size: %zu. Must have space for a 4-byte "
+        "header",
+        buf_size);
+    return RMW_RET_ERROR;
+  }
+
+  memset(buf, 0, CDR_HEADER_SIZE);
+  if (UCDR_MACHINE_ENDIANNESS == UCDR_LITTLE_ENDIANNESS) {
+    buf[1] |= 0x1;
+  }
+  // TODO(bjsowa): What do the rest of the bits in the CDR header mean? Do we care?
+
   ucdrBuffer ub;
-
-  memcpy(buf, cdr_encapsulation, CDR_ENCAPSULATION_SIZE);
-
-  ucdr_init_buffer(&ub, &buf[CDR_ENCAPSULATION_SIZE], buf_size - CDR_ENCAPSULATION_SIZE);
+  ucdr_init_buffer_origin_offset(&ub, buf, buf_size, CDR_HEADER_SIZE, CDR_HEADER_SIZE);
   if (!type_support->callbacks->cdr_serialize(ros_message, &ub)) {
-    RMW_SET_ERROR_MSG("failed to create type name string");
+    RMW_SET_ERROR_MSG("Type support failed to serialize the message");
     return RMW_RET_ERROR;
   }
 
@@ -85,14 +96,31 @@ rmw_ret_t rmw_zenohpico_type_support_serialize_ros_message(
 }
 
 rmw_ret_t rmw_zenohpico_type_support_deserialize_ros_message(
-    rmw_zenohpico_type_support_t *type_support, const uint8_t *buf, void *ros_message) {
-  RCUTILS_UNUSED(type_support);
-  RCUTILS_UNUSED(buf);
-  RCUTILS_UNUSED(ros_message);
+    rmw_zenohpico_type_support_t *type_support, const uint8_t *buf, size_t buf_size,
+    void *ros_message) {
+  if (buf_size < CDR_HEADER_SIZE) {
+    RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
+        "Cannot deserialize buffer of size: %zu. Must contain at least a 4-byte header", buf_size);
+    return RMW_RET_ERROR;
+  }
 
-  // TODO
+  ucdrEndianness endianness;
+  if (buf[1] & 0x1) {
+    endianness = UCDR_LITTLE_ENDIANNESS;
+  } else {
+    endianness = UCDR_BIG_ENDIANNESS;
+  }
+  // TODO(bjsowa): What do the rest of the bits in the CDR header mean? Do we care?
 
-  return RMW_RET_ERROR;
+  ucdrBuffer ub;
+  ucdr_init_buffer_origin_offset_endian(&ub, (uint8_t *)buf, buf_size, CDR_HEADER_SIZE,
+                                        CDR_HEADER_SIZE, endianness);
+  if (!type_support->callbacks->cdr_deserialize(&ub, ros_message)) {
+    RMW_SET_ERROR_MSG("Type support failed to deserialize the message");
+    return RMW_RET_ERROR;
+  }
+
+  return RMW_RET_OK;
 }
 
 rmw_ret_t rmw_zenohpico_find_message_type_support(

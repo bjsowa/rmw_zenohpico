@@ -29,7 +29,8 @@ rmw_ret_t rmw_zenohpico_type_support_serialize_ros_message(
     size_t buf_size);
 
 rmw_ret_t rmw_zenohpico_type_support_deserialize_ros_message(
-    rmw_zenohpico_type_support_t *type_support, const uint8_t *buf, void *ros_message);
+    rmw_zenohpico_type_support_t *type_support, const uint8_t *buf, size_t buf_size,
+    void *ros_message);
 
 rmw_ret_t rmw_zenohpico_find_message_type_support(
     const rosidl_message_type_support_t *type_supports,
