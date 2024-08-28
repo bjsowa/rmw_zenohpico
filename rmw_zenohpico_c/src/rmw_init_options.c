@@ -115,8 +115,8 @@ rmw_ret_t rmw_init_options_copy(const rmw_init_options_t* src, rmw_init_options_
     goto fail_allocate_init_options_impl;
   });
 
-  // TODO is there a way to copy it?
-  tmp.impl->config = src->impl->config;
+  // TODO(bjsowa): Add error checking when it will be supported in zenoh-pico
+  z_config_clone(&tmp.impl->config, z_loan(src->impl->config));
 
   *dst = tmp;
 
