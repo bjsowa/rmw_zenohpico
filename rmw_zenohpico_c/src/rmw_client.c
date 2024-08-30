@@ -106,6 +106,8 @@ rmw_client_t* rmw_create_client(const rmw_node_t* node,
 
   // TODO(bjsowa): liveliness tokens stuff
 
+  rmw_client->data = client_data;
+
   allocator->deallocate(type_hash_c_str, allocator->state);
 
   return rmw_client;
