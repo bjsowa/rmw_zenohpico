@@ -19,7 +19,7 @@ rmw_ret_t rmw_init_options_init(rmw_init_options_t* init_options, rcutils_alloca
   }
 
   init_options->instance_id = 0;
-  init_options->implementation_identifier = rmw_zenohpico_identifier;
+  init_options->implementation_identifier = rmw_zp_identifier;
   init_options->allocator = allocator;
   init_options->enclave = "/";
   init_options->domain_id = RMW_DEFAULT_DOMAIN_ID;
@@ -42,9 +42,9 @@ rmw_ret_t rmw_init_options_init(rmw_init_options_t* init_options, rcutils_alloca
   z_config_new(&init_options->impl->config);
 
   if (zp_config_insert(z_loan_mut(init_options->impl->config), Z_CONFIG_MODE_KEY,
-                       rmw_zenohpico_default_mode) < 0 ||
+                       rmw_zp_default_mode) < 0 ||
       zp_config_insert(z_loan_mut(init_options->impl->config), Z_CONFIG_CONNECT_KEY,
-                       rmw_zenohpico_default_clocator) < 0) {
+                       rmw_zp_default_clocator) < 0) {
     ret = RMW_RET_ERROR;
     goto fail_z_config_insert;
   }
@@ -70,7 +70,7 @@ rmw_ret_t rmw_init_options_copy(const rmw_init_options_t* src, rmw_init_options_
     RMW_SET_ERROR_MSG("expected initialized dst");
     return RMW_RET_INVALID_ARGUMENT;
   }
-  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(src, src->implementation_identifier, rmw_zenohpico_identifier,
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(src, src->implementation_identifier, rmw_zp_identifier,
                                    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
   if (NULL != dst->implementation_identifier) {
     RMW_SET_ERROR_MSG("expected zero-initialized dst");
@@ -81,7 +81,7 @@ rmw_ret_t rmw_init_options_copy(const rmw_init_options_t* src, rmw_init_options_
 
   rmw_init_options_t tmp;
   tmp.instance_id = src->instance_id;
-  tmp.implementation_identifier = rmw_zenohpico_identifier;
+  tmp.implementation_identifier = rmw_zp_identifier;
   tmp.domain_id = src->domain_id;
   tmp.security_options = rmw_get_zero_initialized_security_options();
   rmw_ret_t ret =
@@ -142,8 +142,7 @@ rmw_ret_t rmw_init_options_fini(rmw_init_options_t* init_options) {
     return RMW_RET_INVALID_ARGUMENT;
   }
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(init_options, init_options->implementation_identifier,
-                                   rmw_zenohpico_identifier,
-                                   return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+                                   rmw_zp_identifier, return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
   rcutils_allocator_t* allocator = &init_options->allocator;
   RCUTILS_CHECK_ALLOCATOR(allocator, return RMW_RET_INVALID_ARGUMENT);
 

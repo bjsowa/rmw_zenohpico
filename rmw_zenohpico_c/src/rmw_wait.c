@@ -11,14 +11,14 @@ static bool check_and_attach_condition(const rmw_subscriptions_t *const subscrip
                                        const rmw_services_t *const services,
                                        const rmw_clients_t *const clients,
                                        const rmw_events_t *const events,
-                                       rmw_zenohpico_wait_set_t *wait_set_data) {
+                                       rmw_zp_wait_set_t *wait_set_data) {
   if (guard_conditions) {
     for (size_t i = 0; i < guard_conditions->guard_condition_count; ++i) {
-      rmw_zenohpico_guard_condition_t *gc = guard_conditions->guard_conditions[i];
+      rmw_zp_guard_condition_t *gc = guard_conditions->guard_conditions[i];
       if (gc == NULL) {
         continue;
       }
-      if (rmw_zenohpico_guard_condition_check_and_attach_condition_if_not(gc, wait_set_data)) {
+      if (rmw_zp_guard_condition_check_and_attach_condition_if_not(gc, wait_set_data)) {
         return true;
       }
     }
@@ -110,10 +110,9 @@ rmw_ret_t rmw_wait(rmw_subscriptions_t *subscriptions, rmw_guard_conditions_t *g
                    rmw_wait_set_t *wait_set, const rmw_time_t *wait_timeout) {
   RMW_CHECK_ARGUMENT_FOR_NULL(wait_set, RMW_RET_INVALID_ARGUMENT);
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(wait set handle, wait_set->implementation_identifier,
-                                   rmw_zenohpico_identifier,
-                                   return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+                                   rmw_zp_identifier, return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
 
-  rmw_zenohpico_wait_set_t *wait_set_data = wait_set->data;
+  rmw_zp_wait_set_t *wait_set_data = wait_set->data;
   RMW_CHECK_FOR_NULL_WITH_MSG(wait_set_data, "waitset data struct is null", return RMW_RET_ERROR);
 
   // rmw_wait should return *all* entities that have data available, and let the
@@ -180,11 +179,11 @@ rmw_ret_t rmw_wait(rmw_subscriptions_t *subscriptions, rmw_guard_conditions_t *g
   // various arrays that have *not* been triggered should be set to NULL
   if (guard_conditions) {
     for (size_t i = 0; i < guard_conditions->guard_condition_count; ++i) {
-      rmw_zenohpico_guard_condition_t *gc = guard_conditions->guard_conditions[i];
+      rmw_zp_guard_condition_t *gc = guard_conditions->guard_conditions[i];
       if (gc == NULL) {
         continue;
       }
-      if (!rmw_zenohpico_guard_condition_detach_condition_and_is_trigger_set(gc)) {
+      if (!rmw_zp_guard_condition_detach_condition_and_is_trigger_set(gc)) {
         // Setting to NULL lets rcl know that this guard condition is not ready
         guard_conditions->guard_conditions[i] = NULL;
       } else {

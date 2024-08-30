@@ -27,7 +27,7 @@ rmw_subscription_t* rmw_create_subscription(
     const char* topic_name, const rmw_qos_profile_t* qos_profile,
     const rmw_subscription_options_t* subscription_options) {
   RMW_CHECK_ARGUMENT_FOR_NULL(node, NULL);
-  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(node, node->implementation_identifier, rmw_zenohpico_identifier,
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(node, node->implementation_identifier, rmw_zp_identifier,
                                    return NULL);
   RMW_CHECK_ARGUMENT_FOR_NULL(type_supports, NULL);
   RMW_CHECK_ARGUMENT_FOR_NULL(topic_name, NULL);
@@ -40,13 +40,13 @@ rmw_subscription_t* rmw_create_subscription(
 
   // Get the RMW type support.
   const rosidl_message_type_support_t* message_type_support;
-  if (rmw_zenohpico_find_message_type_support(type_supports, &message_type_support) != RMW_RET_OK) {
+  if (rmw_zp_find_message_type_support(type_supports, &message_type_support) != RMW_RET_OK) {
     // error was already set by find_message_type_support
     return NULL;
   }
 
   RMW_CHECK_ARGUMENT_FOR_NULL(node->data, NULL);
-  rmw_zenohpico_node_t* node_data = node->data;
+  rmw_zp_node_t* node_data = node->data;
   RMW_CHECK_FOR_NULL_WITH_MSG(node_data, "unable to create subscription as node_data is invalid.",
                               return NULL);
   // TODO: Check if a duplicate entry for the same topic name + topic
@@ -68,12 +68,12 @@ rmw_subscription_t* rmw_create_subscription(
   RMW_CHECK_FOR_NULL_WITH_MSG(rmw_subscription, "failed to allocate memory for the subscription",
                               return NULL);
 
-  rmw_zenohpico_subscription_t* sub_data =
-      allocator->zero_allocate(1, sizeof(rmw_zenohpico_subscription_t), allocator->state);
+  rmw_zp_subscription_t* sub_data =
+      allocator->zero_allocate(1, sizeof(rmw_zp_subscription_t), allocator->state);
   RMW_CHECK_FOR_NULL_WITH_MSG(sub_data, "failed to allocate memory for subscription data",
                               goto fail_allocate_subscription_data);
 
-  if (rmw_zenohpico_subscription_init(sub_data, qos_profile, allocator) != RMW_RET_OK) {
+  if (rmw_zp_subscription_init(sub_data, qos_profile, allocator) != RMW_RET_OK) {
     goto fail_init_subscription_data;
   }
 
@@ -82,11 +82,11 @@ rmw_subscription_t* rmw_create_subscription(
   sub_data->type_support_impl = message_type_support->data;
 
   sub_data->type_support =
-      allocator->zero_allocate(1, sizeof(rmw_zenohpico_type_support_t), allocator->state);
+      allocator->zero_allocate(1, sizeof(rmw_zp_type_support_t), allocator->state);
   RMW_CHECK_FOR_NULL_WITH_MSG(sub_data->type_support, "Failed to allocate zenohpico type support",
                               goto fail_allocate_type_support);
 
-  if (rmw_zenohpico_type_support_init(sub_data->type_support, message_type_support, allocator) !=
+  if (rmw_zp_type_support_init(sub_data->type_support, message_type_support, allocator) !=
       RMW_RET_OK) {
     goto fail_init_type_support;
   }
@@ -94,7 +94,7 @@ rmw_subscription_t* rmw_create_subscription(
   sub_data->context = node->context;
 
   rmw_subscription->data = sub_data;
-  rmw_subscription->implementation_identifier = rmw_zenohpico_identifier;
+  rmw_subscription->implementation_identifier = rmw_zp_identifier;
 
   rmw_subscription->topic_name = rcutils_strdup(topic_name, *allocator);
   RMW_CHECK_FOR_NULL_WITH_MSG(rmw_subscription->topic_name, "Failed to allocate topic name",
@@ -126,7 +126,7 @@ rmw_subscription_t* rmw_create_subscription(
   // Everything above succeeded and is setup properly.  Now declare a subscriber
   // with Zenoh; after this, callbacks may come in at any time.
   z_owned_closure_sample_t callback;
-  z_closure(&callback, rmw_zenohpico_sub_data_handler, NULL, sub_data);
+  z_closure(&callback, rmw_zp_sub_data_handler, NULL, sub_data);
 
   // TODO: support transient local qos via querying subscriber
   z_subscriber_options_t sub_options;
@@ -156,11 +156,11 @@ fail_create_zenoh_key:
 fail_allocate_type_hash_c_str:
   allocator->deallocate((char*)rmw_subscription->topic_name, allocator->state);
 fail_allocate_topic_name:
-  rmw_zenohpico_type_support_fini(sub_data->type_support, allocator->state);
+  rmw_zp_type_support_fini(sub_data->type_support, allocator->state);
 fail_init_type_support:
   allocator->deallocate(sub_data->type_support, allocator->state);
 fail_allocate_type_support:
-  rmw_zenohpico_subscription_fini(sub_data, allocator);
+  rmw_zp_subscription_fini(sub_data, allocator);
 fail_init_subscription_data:
   allocator->deallocate(sub_data, allocator->state);
 fail_allocate_subscription_data:
@@ -171,16 +171,15 @@ fail_allocate_subscription_data:
 rmw_ret_t rmw_destroy_subscription(rmw_node_t* node, rmw_subscription_t* subscription) {
   RMW_CHECK_ARGUMENT_FOR_NULL(node, RMW_RET_INVALID_ARGUMENT);
   RMW_CHECK_ARGUMENT_FOR_NULL(subscription, RMW_RET_INVALID_ARGUMENT);
-  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(node, node->implementation_identifier, rmw_zenohpico_identifier,
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(node, node->implementation_identifier, rmw_zp_identifier,
                                    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(subscription, subscription->implementation_identifier,
-                                   rmw_zenohpico_identifier,
-                                   return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+                                   rmw_zp_identifier, return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
 
   rmw_ret_t ret = RMW_RET_OK;
 
   rcutils_allocator_t* allocator = &node->context->options.allocator;
-  rmw_zenohpico_subscription_t* sub_data = subscription->data;
+  rmw_zp_subscription_t* sub_data = subscription->data;
 
   if (z_undeclare_subscriber(z_move(sub_data->sub)) < 0) {
     RMW_SET_ERROR_MSG("failed to undeclare sub");
@@ -189,13 +188,13 @@ rmw_ret_t rmw_destroy_subscription(rmw_node_t* node, rmw_subscription_t* subscri
 
   allocator->deallocate((char*)subscription->topic_name, allocator->state);
 
-  if (rmw_zenohpico_type_support_fini(sub_data->type_support, allocator->state) != RMW_RET_OK) {
+  if (rmw_zp_type_support_fini(sub_data->type_support, allocator->state) != RMW_RET_OK) {
     ret = RMW_RET_ERROR;
   }
 
   allocator->deallocate(sub_data->type_support, allocator->state);
 
-  if (rmw_zenohpico_subscription_fini(sub_data, allocator) != RMW_RET_OK) {
+  if (rmw_zp_subscription_fini(sub_data, allocator) != RMW_RET_OK) {
     ret = RMW_RET_ERROR;
   }
 
@@ -217,11 +216,10 @@ rmw_ret_t rmw_subscription_get_actual_qos(const rmw_subscription_t* subscription
                                           rmw_qos_profile_t* qos) {
   RMW_CHECK_ARGUMENT_FOR_NULL(subscription, RMW_RET_INVALID_ARGUMENT);
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(subscription, subscription->implementation_identifier,
-                                   rmw_zenohpico_identifier,
-                                   return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+                                   rmw_zp_identifier, return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
   RMW_CHECK_ARGUMENT_FOR_NULL(qos, RMW_RET_INVALID_ARGUMENT);
 
-  rmw_zenohpico_subscription_t* sub_data = subscription->data;
+  rmw_zp_subscription_t* sub_data = subscription->data;
   RMW_CHECK_ARGUMENT_FOR_NULL(sub_data, RMW_RET_INVALID_ARGUMENT);
 
   *qos = sub_data->adapted_qos_profile;

@@ -13,12 +13,11 @@ rmw_ret_t rmw_publish(const rmw_publisher_t *publisher, const void *ros_message,
   RMW_CHECK_FOR_NULL_WITH_MSG(publisher, "publisher handle is null",
                               return RMW_RET_INVALID_ARGUMENT);
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(publisher, publisher->implementation_identifier,
-                                   rmw_zenohpico_identifier,
-                                   return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+                                   rmw_zp_identifier, return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
   RMW_CHECK_FOR_NULL_WITH_MSG(ros_message, "ros message handle is null",
                               return RMW_RET_INVALID_ARGUMENT);
 
-  rmw_zenohpico_publisher_t *publisher_data = publisher->data;
+  rmw_zp_publisher_t *publisher_data = publisher->data;
   RMW_CHECK_FOR_NULL_WITH_MSG(publisher_data, "publisher_data is null",
                               return RMW_RET_INVALID_ARGUMENT);
 
@@ -26,19 +25,19 @@ rmw_ret_t rmw_publish(const rmw_publisher_t *publisher, const void *ros_message,
 
   // Serialize data.
   size_t serialized_size =
-      rmw_zenohpico_type_support_get_serialized_size(publisher_data->type_support, ros_message);
+      rmw_zp_type_support_get_serialized_size(publisher_data->type_support, ros_message);
 
   // To store serialized message byte array.
   uint8_t *msg_bytes = allocator->allocate(serialized_size, allocator->state);
   RMW_CHECK_FOR_NULL_WITH_MSG(msg_bytes, "bytes for message is null", return RMW_RET_BAD_ALLOC);
 
-  if (rmw_zenohpico_type_support_serialize_ros_message(publisher_data->type_support, ros_message,
-                                                       msg_bytes, serialized_size) != RMW_RET_OK) {
+  if (rmw_zp_type_support_serialize_ros_message(publisher_data->type_support, ros_message,
+                                                msg_bytes, serialized_size) != RMW_RET_OK) {
     goto fail_serialize_ros_message;
   }
 
   // create attachment
-  int64_t sequence_number = rmw_zenohpico_publisher_get_next_sequence_number(publisher_data);
+  int64_t sequence_number = rmw_zp_publisher_get_next_sequence_number(publisher_data);
 
   zp_time_since_epoch time_since_epoch;
   if (zp_get_time_since_epoch(&time_since_epoch) < 0) {
@@ -49,13 +48,12 @@ rmw_ret_t rmw_publish(const rmw_publisher_t *publisher, const void *ros_message,
   int64_t source_timestamp =
       (int64_t)time_since_epoch.secs * 1000000000ll + (int64_t)time_since_epoch.nanos;
 
-  rmw_zenohpico_attachment_data_t attachment_data = {.sequence_number = sequence_number,
-                                                     .source_timestamp = source_timestamp};
+  rmw_zp_attachment_data_t attachment_data = {.sequence_number = sequence_number,
+                                              .source_timestamp = source_timestamp};
   memcpy(attachment_data.source_gid, publisher_data->pub_gid, RMW_GID_STORAGE_SIZE);
 
   z_owned_bytes_t attachment;
-  if (rmw_zenohpico_attachment_data_serialize_to_zbytes(&attachment_data, &attachment) !=
-      RMW_RET_OK) {
+  if (rmw_zp_attachment_data_serialize_to_zbytes(&attachment_data, &attachment) != RMW_RET_OK) {
     goto fail_serialize_attachment;
   }
 

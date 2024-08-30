@@ -13,15 +13,14 @@ rmw_ret_t rmw_get_serialized_message_size(const rosidl_message_type_support_t *t
 rmw_ret_t rmw_serialize(const void *ros_message, const rosidl_message_type_support_t *type_supports,
                         rmw_serialized_message_t *serialized_message) {
   const rosidl_message_type_support_t *message_type_support;
-  if (rmw_zenohpico_find_message_type_support(type_supports, &message_type_support) != RMW_RET_OK) {
+  if (rmw_zp_find_message_type_support(type_supports, &message_type_support) != RMW_RET_OK) {
     return RMW_RET_ERROR;
   }
 
-  rmw_zenohpico_type_support_t type_support;
+  rmw_zp_type_support_t type_support;
   type_support.callbacks = message_type_support->data;
 
-  size_t serialized_size =
-      rmw_zenohpico_type_support_get_serialized_size(&type_support, ros_message);
+  size_t serialized_size = rmw_zp_type_support_get_serialized_size(&type_support, ros_message);
 
   if (serialized_message->buffer_capacity < serialized_size) {
     if (rmw_serialized_message_resize(serialized_message, serialized_size) != RMW_RET_OK) {
@@ -32,7 +31,7 @@ rmw_ret_t rmw_serialize(const void *ros_message, const rosidl_message_type_suppo
   serialized_message->buffer_length = serialized_size;
   serialized_message->buffer_capacity = serialized_size;
 
-  if (rmw_zenohpico_type_support_serialize_ros_message(
+  if (rmw_zp_type_support_serialize_ros_message(
           &type_support, ros_message, serialized_message->buffer, serialized_size) != RMW_RET_OK) {
     return RMW_RET_ERROR;
   }
@@ -43,16 +42,16 @@ rmw_ret_t rmw_serialize(const void *ros_message, const rosidl_message_type_suppo
 rmw_ret_t rmw_deserialize(const rmw_serialized_message_t *serialized_message,
                           const rosidl_message_type_support_t *type_supports, void *ros_message) {
   const rosidl_message_type_support_t *message_type_support;
-  if (rmw_zenohpico_find_message_type_support(type_supports, &message_type_support) != RMW_RET_OK) {
+  if (rmw_zp_find_message_type_support(type_supports, &message_type_support) != RMW_RET_OK) {
     return RMW_RET_ERROR;
   }
 
-  rmw_zenohpico_type_support_t type_support;
+  rmw_zp_type_support_t type_support;
   type_support.callbacks = message_type_support->data;
 
-  if (rmw_zenohpico_type_support_deserialize_ros_message(&type_support, serialized_message->buffer,
-                                                         serialized_message->buffer_length,
-                                                         ros_message) != RMW_RET_OK) {
+  if (rmw_zp_type_support_deserialize_ros_message(&type_support, serialized_message->buffer,
+                                                  serialized_message->buffer_length,
+                                                  ros_message) != RMW_RET_OK) {
     return RMW_RET_ERROR;
   }
 

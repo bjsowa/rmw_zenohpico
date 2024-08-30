@@ -6,7 +6,7 @@
 #include "rmw/init.h"
 #include "zenoh-pico.h"
 
-typedef struct rmw_zenohpico_wait_set_s {
+typedef struct {
   // The combination of condition_variable, condition_mutex, and triggered are used to make sure
   // there isn't a race in rmw_wait().  That could happen because of the following sequence:
   //
@@ -36,10 +36,10 @@ typedef struct rmw_zenohpico_wait_set_s {
   bool triggered;
 
   rmw_context_t* context;
-} rmw_zenohpico_wait_set_t;
+} rmw_zp_wait_set_t;
 
-rmw_ret_t rmw_zenohpico_wait_set_init(rmw_zenohpico_wait_set_t* wait_set);
+rmw_ret_t rmw_zp_wait_set_init(rmw_zp_wait_set_t* wait_set);
 
-rmw_ret_t rmw_zenohpico_wait_set_fini(rmw_zenohpico_wait_set_t* wait_set);
+rmw_ret_t rmw_zp_wait_set_fini(rmw_zp_wait_set_t* wait_set);
 
 #endif

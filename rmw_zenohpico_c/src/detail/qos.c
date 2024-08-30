@@ -20,7 +20,7 @@
 #define RMW_ZENOHPICO_DEFAULT_LIVELINESS                RMW_QOS_POLICY_LIVELINESS_AUTOMATIC;
 #define RMW_ZENOHPICO_DEFAULT_LIVELINESS_LEASE_DURATION RMW_DURATION_INFINITE;
 
-rmw_ret_t rmw_zenohpico_adapt_qos_profile(rmw_qos_profile_t *qos_profile) {
+rmw_ret_t rmw_zp_adapt_qos_profile(rmw_qos_profile_t *qos_profile) {
   switch (qos_profile->history) {
     case RMW_QOS_POLICY_HISTORY_SYSTEM_DEFAULT:
     case RMW_QOS_POLICY_HISTORY_UNKNOWN:

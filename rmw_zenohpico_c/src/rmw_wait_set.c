@@ -11,8 +11,8 @@ rmw_wait_set_t *rmw_create_wait_set(rmw_context_t *context, size_t max_condition
   RCUTILS_UNUSED(max_conditions);
 
   RCUTILS_CHECK_ARGUMENT_FOR_NULL(context, NULL);
-  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(context, context->implementation_identifier,
-                                   rmw_zenohpico_identifier, return NULL);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(context, context->implementation_identifier, rmw_zp_identifier,
+                                   return NULL);
 
   rcutils_allocator_t *allocator = &context->options.allocator;
 
@@ -20,14 +20,14 @@ rmw_wait_set_t *rmw_create_wait_set(rmw_context_t *context, size_t max_condition
       (rmw_wait_set_t *)allocator->zero_allocate(1, sizeof(rmw_wait_set_t), allocator->state);
   RMW_CHECK_FOR_NULL_WITH_MSG(wait_set, "failed to allocate wait set", return NULL);
 
-  wait_set->implementation_identifier = rmw_zenohpico_identifier;
+  wait_set->implementation_identifier = rmw_zp_identifier;
 
-  rmw_zenohpico_wait_set_t *wait_set_data =
-      allocator->zero_allocate(1, sizeof(rmw_zenohpico_wait_set_t), allocator->state);
+  rmw_zp_wait_set_t *wait_set_data =
+      allocator->zero_allocate(1, sizeof(rmw_zp_wait_set_t), allocator->state);
   RMW_CHECK_FOR_NULL_WITH_MSG(wait_set->data, "failed to allocate wait set data",
                               goto fail_allocate_wait_set_data);
 
-  if (rmw_zenohpico_wait_set_init(wait_set_data) != RMW_RET_OK) {
+  if (rmw_zp_wait_set_init(wait_set_data) != RMW_RET_OK) {
     goto fail_init_wait_set_data;
   }
 
@@ -36,7 +36,7 @@ rmw_wait_set_t *rmw_create_wait_set(rmw_context_t *context, size_t max_condition
 
   return wait_set;
 
-  rmw_zenohpico_wait_set_fini(wait_set_data);
+  rmw_zp_wait_set_fini(wait_set_data);
 fail_init_wait_set_data:
   allocator->deallocate(wait_set->data, allocator->state);
 fail_allocate_wait_set_data:
@@ -49,16 +49,15 @@ fail_allocate_wait_set_data:
 rmw_ret_t rmw_destroy_wait_set(rmw_wait_set_t *wait_set) {
   RMW_CHECK_ARGUMENT_FOR_NULL(wait_set, RMW_RET_INVALID_ARGUMENT);
   RMW_CHECK_ARGUMENT_FOR_NULL(wait_set->data, RMW_RET_INVALID_ARGUMENT);
-  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(wait_set, wait_set->implementation_identifier,
-                                   rmw_zenohpico_identifier,
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(wait_set, wait_set->implementation_identifier, rmw_zp_identifier,
                                    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
 
-  rmw_zenohpico_wait_set_t *wait_set_data = wait_set->data;
+  rmw_zp_wait_set_t *wait_set_data = wait_set->data;
   rcutils_allocator_t *allocator = &wait_set_data->context->options.allocator;
 
   rmw_ret_t ret = RMW_RET_OK;
 
-  ret = rmw_zenohpico_wait_set_fini(wait_set_data);
+  ret = rmw_zp_wait_set_fini(wait_set_data);
   allocator->deallocate(wait_set_data, allocator->state);
 
   allocator->deallocate(wait_set, allocator->state);

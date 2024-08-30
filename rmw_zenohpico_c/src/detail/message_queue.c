@@ -2,8 +2,8 @@
 
 #include "rmw/error_handling.h"
 
-rmw_ret_t rmw_zenohpico_message_queue_init(rmw_zenohpico_message_queue_t *message_queue,
-                                           size_t capacity, rcutils_allocator_t *allocator) {
+rmw_ret_t rmw_zp_message_queue_init(rmw_zp_message_queue_t *message_queue, size_t capacity,
+                                    rcutils_allocator_t *allocator) {
   message_queue->capacity = capacity;
   message_queue->size = message_queue->idx_front = message_queue->idx_back = 0;
 
@@ -18,8 +18,8 @@ rmw_ret_t rmw_zenohpico_message_queue_init(rmw_zenohpico_message_queue_t *messag
   return RMW_RET_OK;
 }
 
-rmw_ret_t rmw_zenohpico_message_queue_fini(rmw_zenohpico_message_queue_t *message_queue,
-                                           rcutils_allocator_t *allocator) {
+rmw_ret_t rmw_zp_message_queue_fini(rmw_zp_message_queue_t *message_queue,
+                                    rcutils_allocator_t *allocator) {
   if (message_queue->messages != NULL) {
     allocator->deallocate(message_queue->messages, allocator->state);
   }
@@ -27,8 +27,8 @@ rmw_ret_t rmw_zenohpico_message_queue_fini(rmw_zenohpico_message_queue_t *messag
   return RMW_RET_OK;
 }
 
-rmw_ret_t rmw_zenohpico_message_queue_pop_front(rmw_zenohpico_message_queue_t *message_queue,
-                                                z_owned_slice_t *msg_data) {
+rmw_ret_t rmw_zp_message_queue_pop_front(rmw_zp_message_queue_t *message_queue,
+                                         z_owned_slice_t *msg_data) {
   if (message_queue->size == 0) {
     RMW_SET_ERROR_MSG("Trying to pop messages from empty queue");
     return RMW_RET_ERROR;
@@ -50,8 +50,8 @@ rmw_ret_t rmw_zenohpico_message_queue_pop_front(rmw_zenohpico_message_queue_t *m
   return RMW_RET_OK;
 }
 
-rmw_ret_t rmw_zenohpico_message_queue_push_back(rmw_zenohpico_message_queue_t *message_queue,
-                                                z_moved_slice_t *payload) {
+rmw_ret_t rmw_zp_message_queue_push_back(rmw_zp_message_queue_t *message_queue,
+                                         z_moved_slice_t *payload) {
   if (message_queue->size == message_queue->capacity) {
     RMW_SET_ERROR_MSG("Trying to push messages to a queue that is full");
     return RMW_RET_ERROR;

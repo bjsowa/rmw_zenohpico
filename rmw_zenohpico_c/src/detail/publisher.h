@@ -9,7 +9,7 @@
 #include "rosidl_typesupport_microxrcedds_c/message_type_support.h"
 #include "zenoh-pico.h"
 
-typedef struct rmw_zenohpico_publisher_s {
+typedef struct {
   // An owned publisher.
   z_owned_publisher_t pub;
 
@@ -20,7 +20,7 @@ typedef struct rmw_zenohpico_publisher_s {
   const void* type_support_impl;
   const char* typesupport_identifier;
   const rosidl_type_hash_t* type_hash;
-  rmw_zenohpico_type_support_t* type_support;
+  rmw_zp_type_support_t* type_support;
 
   // Context for memory allocation for messages.
   rmw_context_t* context;
@@ -29,13 +29,13 @@ typedef struct rmw_zenohpico_publisher_s {
 
   z_owned_mutex_t sequence_number_mutex;
   size_t sequence_number;
-} rmw_zenohpico_publisher_t;
+} rmw_zp_publisher_t;
 
-rmw_ret_t rmw_zenohpico_publisher_init(rmw_zenohpico_publisher_t* publisher,
-                                       const rmw_qos_profile_t* qos_profile);
+rmw_ret_t rmw_zp_publisher_init(rmw_zp_publisher_t* publisher,
+                                const rmw_qos_profile_t* qos_profile);
 
-rmw_ret_t rmw_zenohpico_publisher_fini(rmw_zenohpico_publisher_t* publisher);
+rmw_ret_t rmw_zp_publisher_fini(rmw_zp_publisher_t* publisher);
 
-size_t rmw_zenohpico_publisher_get_next_sequence_number(rmw_zenohpico_publisher_t* publisher);
+size_t rmw_zp_publisher_get_next_sequence_number(rmw_zp_publisher_t* publisher);
 
 #endif

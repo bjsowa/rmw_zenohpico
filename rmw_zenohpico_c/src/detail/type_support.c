@@ -40,9 +40,9 @@ static const char *create_type_name(const message_type_support_callbacks_t *memb
   return type_name;
 }
 
-rmw_ret_t rmw_zenohpico_type_support_init(rmw_zenohpico_type_support_t *type_support,
-                                          const rosidl_message_type_support_t *message_type_support,
-                                          rcutils_allocator_t *allocator) {
+rmw_ret_t rmw_zp_type_support_init(rmw_zp_type_support_t *type_support,
+                                   const rosidl_message_type_support_t *message_type_support,
+                                   rcutils_allocator_t *allocator) {
   // TODO: Check type support identifier
   type_support->callbacks = message_type_support->data;
 
@@ -54,8 +54,8 @@ rmw_ret_t rmw_zenohpico_type_support_init(rmw_zenohpico_type_support_t *type_sup
   return RMW_RET_OK;
 }
 
-rmw_ret_t rmw_zenohpico_type_support_fini(rmw_zenohpico_type_support_t *type_support,
-                                          rcutils_allocator_t *allocator) {
+rmw_ret_t rmw_zp_type_support_fini(rmw_zp_type_support_t *type_support,
+                                   rcutils_allocator_t *allocator) {
   if (type_support->type_name != NULL) {
     allocator->deallocate((char *)type_support->type_name, allocator->state);
   }
@@ -63,14 +63,14 @@ rmw_ret_t rmw_zenohpico_type_support_fini(rmw_zenohpico_type_support_t *type_sup
   return RMW_RET_OK;
 }
 
-size_t rmw_zenohpico_type_support_get_serialized_size(rmw_zenohpico_type_support_t *type_support,
-                                                      const void *ros_message) {
+size_t rmw_zp_type_support_get_serialized_size(rmw_zp_type_support_t *type_support,
+                                               const void *ros_message) {
   return CDR_HEADER_SIZE + type_support->callbacks->get_serialized_size(ros_message);
 }
 
-rmw_ret_t rmw_zenohpico_type_support_serialize_ros_message(
-    rmw_zenohpico_type_support_t *type_support, const void *ros_message, uint8_t *buf,
-    size_t buf_size) {
+rmw_ret_t rmw_zp_type_support_serialize_ros_message(rmw_zp_type_support_t *type_support,
+                                                    const void *ros_message, uint8_t *buf,
+                                                    size_t buf_size) {
   if (buf_size < CDR_HEADER_SIZE) {
     RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
         "Cannot serialize the message into buffer of size: %zu. Must have space for a 4-byte "
@@ -95,9 +95,9 @@ rmw_ret_t rmw_zenohpico_type_support_serialize_ros_message(
   return RMW_RET_OK;
 }
 
-rmw_ret_t rmw_zenohpico_type_support_deserialize_ros_message(
-    rmw_zenohpico_type_support_t *type_support, const uint8_t *buf, size_t buf_size,
-    void *ros_message) {
+rmw_ret_t rmw_zp_type_support_deserialize_ros_message(rmw_zp_type_support_t *type_support,
+                                                      const uint8_t *buf, size_t buf_size,
+                                                      void *ros_message) {
   if (buf_size < CDR_HEADER_SIZE) {
     RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
         "Cannot deserialize buffer of size: %zu. Must contain at least a 4-byte header", buf_size);
@@ -123,7 +123,7 @@ rmw_ret_t rmw_zenohpico_type_support_deserialize_ros_message(
   return RMW_RET_OK;
 }
 
-rmw_ret_t rmw_zenohpico_find_message_type_support(
+rmw_ret_t rmw_zp_find_message_type_support(
     const rosidl_message_type_support_t *type_supports,
     rosidl_message_type_support_t const **message_type_support) {
   *message_type_support =
@@ -142,7 +142,7 @@ rmw_ret_t rmw_zenohpico_find_message_type_support(
   return RMW_RET_OK;
 }
 
-rmw_ret_t rmw_zenohpico_find_service_type_support(
+rmw_ret_t rmw_zp_find_service_type_support(
     const rosidl_service_type_support_t *type_supports,
     rosidl_service_type_support_t const **service_type_support) {
   *service_type_support =

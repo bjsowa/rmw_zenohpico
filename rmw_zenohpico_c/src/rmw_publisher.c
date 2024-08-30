@@ -37,7 +37,7 @@ rmw_publisher_t *rmw_create_publisher(const rmw_node_t *node,
                                       const char *topic_name, const rmw_qos_profile_t *qos_profile,
                                       const rmw_publisher_options_t *publisher_options) {
   RMW_CHECK_ARGUMENT_FOR_NULL(node, NULL);
-  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(node, node->implementation_identifier, rmw_zenohpico_identifier,
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(node, node->implementation_identifier, rmw_zp_identifier,
                                    return NULL);
   RMW_CHECK_ARGUMENT_FOR_NULL(type_supports, NULL);
   RMW_CHECK_ARGUMENT_FOR_NULL(topic_name, NULL);
@@ -69,12 +69,12 @@ rmw_publisher_t *rmw_create_publisher(const rmw_node_t *node,
     return NULL;
   }
 
-  rmw_zenohpico_node_t *node_data = node->data;
+  rmw_zp_node_t *node_data = node->data;
   RMW_CHECK_ARGUMENT_FOR_NULL(node_data, NULL);
 
   // Get the RMW type support.
   const rosidl_message_type_support_t *message_type_support;
-  if (rmw_zenohpico_find_message_type_support(type_supports, &message_type_support) != RMW_RET_OK) {
+  if (rmw_zp_find_message_type_support(type_supports, &message_type_support) != RMW_RET_OK) {
     // error was already set by find_message_type_support
     return NULL;
   }
@@ -95,12 +95,12 @@ rmw_publisher_t *rmw_create_publisher(const rmw_node_t *node,
   RMW_CHECK_FOR_NULL_WITH_MSG(rmw_publisher, "failed to allocate memory for the publisher",
                               return NULL);
 
-  rmw_zenohpico_publisher_t *publisher_data = (rmw_zenohpico_publisher_t *)allocator->zero_allocate(
-      1, sizeof(rmw_zenohpico_publisher_t), allocator->state);
+  rmw_zp_publisher_t *publisher_data = (rmw_zp_publisher_t *)allocator->zero_allocate(
+      1, sizeof(rmw_zp_publisher_t), allocator->state);
   RMW_CHECK_FOR_NULL_WITH_MSG(publisher_data, "failed to allocate memory for publisher data",
                               goto fail_allocate_publisher_data);
 
-  if (rmw_zenohpico_publisher_init(publisher_data, qos_profile) != RMW_RET_OK) {
+  if (rmw_zp_publisher_init(publisher_data, qos_profile) != RMW_RET_OK) {
     goto fail_init_publisher_data;
   }
 
@@ -111,19 +111,19 @@ rmw_publisher_t *rmw_create_publisher(const rmw_node_t *node,
   publisher_data->type_support_impl = message_type_support->data;
 
   publisher_data->type_support =
-      allocator->zero_allocate(1, sizeof(rmw_zenohpico_type_support_t), allocator->state);
+      allocator->zero_allocate(1, sizeof(rmw_zp_type_support_t), allocator->state);
   RMW_CHECK_FOR_NULL_WITH_MSG(publisher_data->type_support,
                               "Failed to allocate zenohpico type support",
                               goto fail_allocate_type_support);
 
-  if (rmw_zenohpico_type_support_init(publisher_data->type_support, message_type_support,
-                                      allocator) != RMW_RET_OK) {
+  if (rmw_zp_type_support_init(publisher_data->type_support, message_type_support, allocator) !=
+      RMW_RET_OK) {
     goto fail_init_type_support;
   }
 
   publisher_data->context = node->context;
   rmw_publisher->data = publisher_data;
-  rmw_publisher->implementation_identifier = rmw_zenohpico_identifier;
+  rmw_publisher->implementation_identifier = rmw_zp_identifier;
   rmw_publisher->options = *publisher_options;
   rmw_publisher->can_loan_messages = false;
 
@@ -180,13 +180,13 @@ fail_create_zenoh_publisher:
 fail_create_zenoh_key:
   allocator->deallocate(type_hash_c_str, allocator->state);
 fail_allocate_type_hash_c_str:
-  rmw_zenohpico_type_support_fini(publisher_data->type_support, allocator);
+  rmw_zp_type_support_fini(publisher_data->type_support, allocator);
 fail_init_type_support:
   allocator->deallocate(publisher_data->type_support, allocator->state);
 fail_allocate_type_support:
   allocator->deallocate((char *)rmw_publisher->topic_name, allocator->state);
 fail_allocate_topic_name:
-  rmw_zenohpico_publisher_fini(publisher_data);
+  rmw_zp_publisher_fini(publisher_data);
 fail_init_publisher_data:
   allocator->deallocate(publisher_data, allocator->state);
 fail_allocate_publisher_data:
@@ -201,30 +201,29 @@ rmw_ret_t rmw_destroy_publisher(rmw_node_t *node, rmw_publisher_t *publisher) {
   RMW_CHECK_ARGUMENT_FOR_NULL(node, RMW_RET_INVALID_ARGUMENT);
   RMW_CHECK_ARGUMENT_FOR_NULL(publisher, RMW_RET_INVALID_ARGUMENT);
   RMW_CHECK_ARGUMENT_FOR_NULL(publisher->data, RMW_RET_INVALID_ARGUMENT);
-  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(node, node->implementation_identifier, rmw_zenohpico_identifier,
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(node, node->implementation_identifier, rmw_zp_identifier,
                                    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(publisher, publisher->implementation_identifier,
-                                   rmw_zenohpico_identifier,
-                                   return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+                                   rmw_zp_identifier, return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
 
   rmw_ret_t ret = RMW_RET_OK;
 
   rcutils_allocator_t *allocator = &node->context->options.allocator;
-  rmw_zenohpico_publisher_t *publisher_data = publisher->data;
+  rmw_zp_publisher_t *publisher_data = publisher->data;
 
   if (z_undeclare_publisher(z_move(publisher_data->pub)) < 0) {
     RMW_SET_ERROR_MSG("failed to undeclare pub");
     ret = RMW_RET_ERROR;
   }
 
-  if (rmw_zenohpico_type_support_fini(publisher_data->type_support, allocator)) {
+  if (rmw_zp_type_support_fini(publisher_data->type_support, allocator)) {
     ret = RMW_RET_ERROR;
   }
 
   allocator->deallocate(publisher_data->type_support, allocator->state);
   allocator->deallocate((char *)publisher->topic_name, allocator->state);
 
-  if (rmw_zenohpico_publisher_fini(publisher_data) != RMW_RET_OK) {
+  if (rmw_zp_publisher_fini(publisher_data) != RMW_RET_OK) {
     ret = RMW_RET_ERROR;
   }
 
@@ -261,11 +260,10 @@ rmw_ret_t rmw_publisher_count_matched_subscriptions(const rmw_publisher_t *publi
 rmw_ret_t rmw_publisher_get_actual_qos(const rmw_publisher_t *publisher, rmw_qos_profile_t *qos) {
   RMW_CHECK_ARGUMENT_FOR_NULL(publisher, RMW_RET_INVALID_ARGUMENT);
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(publisher, publisher->implementation_identifier,
-                                   rmw_zenohpico_identifier,
-                                   return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+                                   rmw_zp_identifier, return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
   RMW_CHECK_ARGUMENT_FOR_NULL(qos, RMW_RET_INVALID_ARGUMENT);
 
-  rmw_zenohpico_publisher_t *pub_data = publisher->data;
+  rmw_zp_publisher_t *pub_data = publisher->data;
   RMW_CHECK_ARGUMENT_FOR_NULL(pub_data, RMW_RET_INVALID_ARGUMENT);
 
   *qos = pub_data->adapted_qos_profile;
@@ -288,10 +286,10 @@ rmw_ret_t rmw_get_gid_for_publisher(const rmw_publisher_t *publisher, rmw_gid_t 
   RMW_CHECK_ARGUMENT_FOR_NULL(publisher, RMW_RET_INVALID_ARGUMENT);
   RMW_CHECK_ARGUMENT_FOR_NULL(gid, RMW_RET_INVALID_ARGUMENT);
 
-  rmw_zenohpico_publisher_t *pub_data = publisher->data;
+  rmw_zp_publisher_t *pub_data = publisher->data;
   RMW_CHECK_ARGUMENT_FOR_NULL(pub_data, RMW_RET_INVALID_ARGUMENT);
 
-  gid->implementation_identifier = rmw_zenohpico_identifier;
+  gid->implementation_identifier = rmw_zp_identifier;
   memcpy(gid->data, pub_data->pub_gid, RMW_GID_STORAGE_SIZE);
 
   return RMW_RET_OK;

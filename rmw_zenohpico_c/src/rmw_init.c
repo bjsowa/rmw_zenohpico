@@ -16,8 +16,7 @@ rmw_ret_t rmw_init(const rmw_init_options_t* options, rmw_context_t* context) {
   RMW_CHECK_ARGUMENT_FOR_NULL(context, RMW_RET_INVALID_ARGUMENT);
   RMW_CHECK_FOR_NULL_WITH_MSG(options->implementation_identifier,
                               "expected initialized init options", return RMW_RET_INVALID_ARGUMENT);
-  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(options, options->implementation_identifier,
-                                   rmw_zenohpico_identifier,
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(options, options->implementation_identifier, rmw_zp_identifier,
                                    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
   if (NULL != context->implementation_identifier) {
     RMW_SET_ERROR_MSG("expected a zero-initialized context");
@@ -27,7 +26,7 @@ rmw_ret_t rmw_init(const rmw_init_options_t* options, rmw_context_t* context) {
   rmw_ret_t ret;
 
   context->instance_id = options->instance_id;
-  context->implementation_identifier = rmw_zenohpico_identifier;
+  context->implementation_identifier = rmw_zp_identifier;
   // No custom handling of RMW_DEFAULT_DOMAIN_ID. Simply use a reasonable domain id.
   context->actual_domain_id = RMW_DEFAULT_DOMAIN_ID != options->domain_id ? options->domain_id : 0u;
 
@@ -93,8 +92,7 @@ rmw_ret_t rmw_shutdown(rmw_context_t* context) {
   RMW_CHECK_ARGUMENT_FOR_NULL(context, RMW_RET_INVALID_ARGUMENT);
   RMW_CHECK_FOR_NULL_WITH_MSG(context->impl, "expected initialized context",
                               return RMW_RET_INVALID_ARGUMENT);
-  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(context, context->implementation_identifier,
-                                   rmw_zenohpico_identifier,
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(context, context->implementation_identifier, rmw_zp_identifier,
                                    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
 
   rmw_ret_t ret = RMW_RET_OK;
@@ -126,8 +124,7 @@ rmw_ret_t rmw_context_fini(rmw_context_t* context) {
   RMW_CHECK_ARGUMENT_FOR_NULL(context, RMW_RET_INVALID_ARGUMENT);
   RMW_CHECK_FOR_NULL_WITH_MSG(context->impl, "expected initialized context",
                               return RMW_RET_INVALID_ARGUMENT);
-  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(context, context->implementation_identifier,
-                                   rmw_zenohpico_identifier,
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(context, context->implementation_identifier, rmw_zp_identifier,
                                    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
   if (!context->impl->is_shutdown) {
     RCUTILS_SET_ERROR_MSG("context has not been shutdown");

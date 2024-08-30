@@ -3,8 +3,8 @@
 #include "rcutils/macros.h"
 #include "rmw/error_handling.h"
 
-typedef struct attachment_context_s {
-  const rmw_zenohpico_attachment_data_t *data;
+typedef struct {
+  const rmw_zp_attachment_data_t *data;
   int idx;
 } attachment_context_t;
 
@@ -30,8 +30,8 @@ static bool create_attachment_iter(z_owned_bytes_t *kv_pair, void *context) {
   return true;
 }
 
-rmw_ret_t rmw_zenohpico_attachment_data_serialize_to_zbytes(
-    const rmw_zenohpico_attachment_data_t *attachment_data, z_owned_bytes_t *attachment) {
+rmw_ret_t rmw_zp_attachment_data_serialize_to_zbytes(
+    const rmw_zp_attachment_data_t *attachment_data, z_owned_bytes_t *attachment) {
   attachment_context_t context = {.data = attachment_data, .idx = 0};
 
   if (z_bytes_from_iter(attachment, create_attachment_iter, (void *)&context) < 0) {
@@ -42,8 +42,8 @@ rmw_ret_t rmw_zenohpico_attachment_data_serialize_to_zbytes(
   return RMW_RET_OK;
 }
 
-rmw_ret_t rmw_zenohpico_attachment_data_deserialize_from_zbytes(
-    const z_loaned_bytes_t *attachment, rmw_zenohpico_attachment_data_t *attachment_data) {
+rmw_ret_t rmw_zp_attachment_data_deserialize_from_zbytes(
+    const z_loaned_bytes_t *attachment, rmw_zp_attachment_data_t *attachment_data) {
   RCUTILS_UNUSED(attachment);
   attachment_data->sequence_number = 0;
   attachment_data->source_timestamp = 0;

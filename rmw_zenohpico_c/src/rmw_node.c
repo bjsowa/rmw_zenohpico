@@ -12,8 +12,8 @@
 /// Create a node and return a handle to that node.
 rmw_node_t *rmw_create_node(rmw_context_t *context, const char *name, const char *namespace_) {
   RMW_CHECK_ARGUMENT_FOR_NULL(context, NULL);
-  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(context, context->implementation_identifier,
-                                   rmw_zenohpico_identifier, return NULL);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(context, context->implementation_identifier, rmw_zp_identifier,
+                                   return NULL);
   RMW_CHECK_FOR_NULL_WITH_MSG(context->impl, "expected initialized context", return NULL);
   if (context->impl->is_shutdown) {
     RCUTILS_SET_ERROR_MSG("context has been shutdown");
@@ -58,17 +58,17 @@ rmw_node_t *rmw_create_node(rmw_context_t *context, const char *name, const char
                               goto fail_allocate_node_namespace;);
 
   // Put metadata into node->data.
-  rmw_zenohpico_node_t *node_data =
-      (rmw_zenohpico_node_t *)allocator->allocate(sizeof(rmw_zenohpico_node_t), allocator->state);
+  rmw_zp_node_t *node_data =
+      (rmw_zp_node_t *)allocator->allocate(sizeof(rmw_zp_node_t), allocator->state);
   RMW_CHECK_FOR_NULL_WITH_MSG(node_data, "failed to allocate memory for node data",
                               goto fail_allocate_node_data;);
 
   // TODO: Initialize liveliness token for the node to advertise that a new node is in town.
-  if (rmw_zenohpico_node_init(node_data) != RMW_RET_OK) {
+  if (rmw_zp_node_init(node_data) != RMW_RET_OK) {
     goto fail_init_node_data;
   }
 
-  node->implementation_identifier = rmw_zenohpico_identifier;
+  node->implementation_identifier = rmw_zp_identifier;
   node->context = context;
   node->data = node_data;
 
@@ -94,16 +94,16 @@ rmw_ret_t rmw_destroy_node(rmw_node_t *node) {
   RMW_CHECK_ARGUMENT_FOR_NULL(node->context, RMW_RET_INVALID_ARGUMENT);
   RMW_CHECK_ARGUMENT_FOR_NULL(node->context->impl, RMW_RET_INVALID_ARGUMENT);
   RMW_CHECK_ARGUMENT_FOR_NULL(node->data, RMW_RET_INVALID_ARGUMENT);
-  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(node, node->implementation_identifier, rmw_zenohpico_identifier,
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(node, node->implementation_identifier, rmw_zp_identifier,
                                    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
 
   rcutils_allocator_t *allocator = &node->context->options.allocator;
 
-  rmw_zenohpico_node_t *node_data = (rmw_zenohpico_node_t *)node->data;
+  rmw_zp_node_t *node_data = (rmw_zp_node_t *)node->data;
   if (node_data != NULL) {
     // TODO: Undeclare liveliness token for the node to advertise that the node has ridden off into
     // the sunset.
-    rmw_zenohpico_node_fini(node_data);
+    rmw_zp_node_fini(node_data);
     allocator->deallocate(node_data, allocator->state);
   }
 
@@ -118,7 +118,7 @@ rmw_ret_t rmw_destroy_node(rmw_node_t *node) {
 /// Return a guard condition which is triggered when the ROS graph changes.
 const rmw_guard_condition_t *rmw_node_get_graph_guard_condition(const rmw_node_t *node) {
   RMW_CHECK_ARGUMENT_FOR_NULL(node, NULL);
-  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(node, node->implementation_identifier, rmw_zenohpico_identifier,
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(node, node->implementation_identifier, rmw_zp_identifier,
                                    return NULL);
 
   RMW_CHECK_ARGUMENT_FOR_NULL(node->context, NULL);
