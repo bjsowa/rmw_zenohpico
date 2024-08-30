@@ -16,11 +16,8 @@ typedef struct {
   // Store the actual QoS profile used to configure this publisher.
   rmw_qos_profile_t adapted_qos_profile;
 
-  // Type support fields
-  const void* type_support_impl;
-  const char* typesupport_identifier;
-  const rosidl_type_hash_t* type_hash;
-  rmw_zp_type_support_t* type_support;
+  // Type support
+  rmw_zp_message_type_support_t* type_support;
 
   // Context for memory allocation for messages.
   rmw_context_t* context;

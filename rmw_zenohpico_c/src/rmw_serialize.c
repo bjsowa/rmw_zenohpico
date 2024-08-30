@@ -17,7 +17,7 @@ rmw_ret_t rmw_serialize(const void *ros_message, const rosidl_message_type_suppo
     return RMW_RET_ERROR;
   }
 
-  rmw_zp_type_support_t type_support;
+  rmw_zp_message_type_support_t type_support;
   type_support.callbacks = message_type_support->data;
 
   size_t serialized_size = rmw_zp_type_support_get_serialized_size(&type_support, ros_message);
@@ -31,8 +31,8 @@ rmw_ret_t rmw_serialize(const void *ros_message, const rosidl_message_type_suppo
   serialized_message->buffer_length = serialized_size;
   serialized_message->buffer_capacity = serialized_size;
 
-  if (rmw_zp_type_support_serialize_ros_message(
-          &type_support, ros_message, serialized_message->buffer, serialized_size) != RMW_RET_OK) {
+  if (rmw_zp_message_type_support_serialize(&type_support, ros_message, serialized_message->buffer,
+                                            serialized_size) != RMW_RET_OK) {
     return RMW_RET_ERROR;
   }
 
@@ -46,12 +46,12 @@ rmw_ret_t rmw_deserialize(const rmw_serialized_message_t *serialized_message,
     return RMW_RET_ERROR;
   }
 
-  rmw_zp_type_support_t type_support;
+  rmw_zp_message_type_support_t type_support;
   type_support.callbacks = message_type_support->data;
 
-  if (rmw_zp_type_support_deserialize_ros_message(&type_support, serialized_message->buffer,
-                                                  serialized_message->buffer_length,
-                                                  ros_message) != RMW_RET_OK) {
+  if (rmw_zp_message_type_support_deserialize(&type_support, serialized_message->buffer,
+                                              serialized_message->buffer_length,
+                                              ros_message) != RMW_RET_OK) {
     return RMW_RET_ERROR;
   }
 

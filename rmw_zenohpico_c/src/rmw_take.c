@@ -19,8 +19,8 @@ static rmw_ret_t take_one(rmw_zp_subscription_t* sub_data, void* ros_message, bo
   const uint8_t* payload = z_slice_data(z_loan(msg_data));
   const size_t payload_len = z_slice_len(z_loan(msg_data));
 
-  if (rmw_zp_type_support_deserialize_ros_message(sub_data->type_support, payload, payload_len,
-                                                  ros_message) != RMW_RET_OK) {
+  if (rmw_zp_message_type_support_deserialize(sub_data->type_support, payload, payload_len,
+                                              ros_message) != RMW_RET_OK) {
     z_drop(z_move(msg_data));
     return RMW_RET_ERROR;
   }

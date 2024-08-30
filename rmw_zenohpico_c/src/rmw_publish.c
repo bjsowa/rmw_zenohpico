@@ -31,8 +31,8 @@ rmw_ret_t rmw_publish(const rmw_publisher_t *publisher, const void *ros_message,
   uint8_t *msg_bytes = allocator->allocate(serialized_size, allocator->state);
   RMW_CHECK_FOR_NULL_WITH_MSG(msg_bytes, "bytes for message is null", return RMW_RET_BAD_ALLOC);
 
-  if (rmw_zp_type_support_serialize_ros_message(publisher_data->type_support, ros_message,
-                                                msg_bytes, serialized_size) != RMW_RET_OK) {
+  if (rmw_zp_message_type_support_serialize(publisher_data->type_support, ros_message, msg_bytes,
+                                            serialized_size) != RMW_RET_OK) {
     goto fail_serialize_ros_message;
   }
 

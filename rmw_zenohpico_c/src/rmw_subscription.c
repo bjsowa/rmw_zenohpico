@@ -38,13 +38,6 @@ rmw_subscription_t* rmw_create_subscription(
   RMW_CHECK_ARGUMENT_FOR_NULL(qos_profile, NULL);
   RMW_CHECK_ARGUMENT_FOR_NULL(subscription_options, NULL);
 
-  // Get the RMW type support.
-  const rosidl_message_type_support_t* message_type_support;
-  if (rmw_zp_find_message_type_support(type_supports, &message_type_support) != RMW_RET_OK) {
-    // error was already set by find_message_type_support
-    return NULL;
-  }
-
   RMW_CHECK_ARGUMENT_FOR_NULL(node->data, NULL);
   rmw_zp_node_t* node_data = node->data;
   RMW_CHECK_FOR_NULL_WITH_MSG(node_data, "unable to create subscription as node_data is invalid.",
@@ -77,16 +70,12 @@ rmw_subscription_t* rmw_create_subscription(
     goto fail_init_subscription_data;
   }
 
-  sub_data->typesupport_identifier = message_type_support->typesupport_identifier;
-  sub_data->type_hash = message_type_support->get_type_hash_func(message_type_support);
-  sub_data->type_support_impl = message_type_support->data;
-
   sub_data->type_support =
-      allocator->zero_allocate(1, sizeof(rmw_zp_type_support_t), allocator->state);
+      allocator->zero_allocate(1, sizeof(rmw_zp_message_type_support_t), allocator->state);
   RMW_CHECK_FOR_NULL_WITH_MSG(sub_data->type_support, "Failed to allocate zenohpico type support",
                               goto fail_allocate_type_support);
 
-  if (rmw_zp_type_support_init(sub_data->type_support, message_type_support, allocator) !=
+  if (rmw_zp_message_type_support_init(sub_data->type_support, type_supports, allocator) !=
       RMW_RET_OK) {
     goto fail_init_type_support;
   }
@@ -107,7 +96,7 @@ rmw_subscription_t* rmw_create_subscription(
   // Convert the type hash to a string so that it can be included in the keyexpr.
   char* type_hash_c_str = NULL;
   rcutils_ret_t stringify_ret =
-      rosidl_stringify_type_hash(sub_data->type_hash, *allocator, &type_hash_c_str);
+      rosidl_stringify_type_hash(sub_data->type_support->type_hash, *allocator, &type_hash_c_str);
   if (RCUTILS_RET_BAD_ALLOC == stringify_ret) {
     RMW_SET_ERROR_MSG("Failed to allocate type_hash_c_str.");
     goto fail_allocate_type_hash_c_str;
@@ -156,7 +145,7 @@ fail_create_zenoh_key:
 fail_allocate_type_hash_c_str:
   allocator->deallocate((char*)rmw_subscription->topic_name, allocator->state);
 fail_allocate_topic_name:
-  rmw_zp_type_support_fini(sub_data->type_support, allocator->state);
+  rmw_zp_message_type_support_fini(sub_data->type_support, allocator->state);
 fail_init_type_support:
   allocator->deallocate(sub_data->type_support, allocator->state);
 fail_allocate_type_support:
@@ -188,7 +177,7 @@ rmw_ret_t rmw_destroy_subscription(rmw_node_t* node, rmw_subscription_t* subscri
 
   allocator->deallocate((char*)subscription->topic_name, allocator->state);
 
-  if (rmw_zp_type_support_fini(sub_data->type_support, allocator->state) != RMW_RET_OK) {
+  if (rmw_zp_message_type_support_fini(sub_data->type_support, allocator->state) != RMW_RET_OK) {
     ret = RMW_RET_ERROR;
   }
 
