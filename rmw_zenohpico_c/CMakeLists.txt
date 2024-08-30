@@ -14,6 +14,7 @@ find_package(zenohpico REQUIRED)
 
 set(SRCS
   src/detail/attachment_helpers.c
+  src/detail/client.c
   src/detail/guard_condition.c
   src/detail/identifiers.c
   src/detail/message_queue.c
@@ -24,6 +25,7 @@ set(SRCS
   src/detail/subscription.c
   src/detail/type_support.c
   src/detail/wait_set.c
+  src/rmw_client.c
   src/rmw_dynamic_message_type_support.c
   src/rmw_event_callbacks.c
   src/rmw_features.c
