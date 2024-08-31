@@ -25,7 +25,7 @@ rmw_ret_t rmw_publish(const rmw_publisher_t *publisher, const void *ros_message,
 
   // Serialize data.
   size_t serialized_size =
-      rmw_zp_type_support_get_serialized_size(publisher_data->type_support, ros_message);
+      rmw_zp_message_type_support_get_serialized_size(publisher_data->type_support, ros_message);
 
   // To store serialized message byte array.
   uint8_t *msg_bytes = allocator->allocate(serialized_size, allocator->state);

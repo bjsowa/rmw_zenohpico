@@ -20,7 +20,7 @@ rmw_ret_t rmw_serialize(const void *ros_message, const rosidl_message_type_suppo
   rmw_zp_message_type_support_t type_support;
   type_support.callbacks = message_type_support->data;
 
-  size_t serialized_size = rmw_zp_type_support_get_serialized_size(&type_support, ros_message);
+  size_t serialized_size = rmw_zp_message_type_support_get_serialized_size(&type_support, ros_message);
 
   if (serialized_message->buffer_capacity < serialized_size) {
     if (rmw_serialized_message_resize(serialized_message, serialized_size) != RMW_RET_OK) {

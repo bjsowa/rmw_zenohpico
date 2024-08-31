@@ -107,6 +107,7 @@ rmw_ret_t rmw_zp_find_service_type_support(
   return RMW_RET_OK;
 }
 
+// Init
 rmw_ret_t rmw_zp_message_type_support_init(
     rmw_zp_message_type_support_t *type_support,
     const rosidl_message_type_support_t *message_type_supports, rcutils_allocator_t *allocator) {
@@ -124,15 +125,6 @@ rmw_ret_t rmw_zp_message_type_support_init(
   }
 
   type_support->type_hash = message_type_support->get_type_hash_func(message_type_support);
-
-  return RMW_RET_OK;
-}
-
-rmw_ret_t rmw_zp_message_type_support_fini(rmw_zp_message_type_support_t *type_support,
-                                           rcutils_allocator_t *allocator) {
-  if (type_support->type_name != NULL) {
-    allocator->deallocate((char *)type_support->type_name, allocator->state);
-  }
 
   return RMW_RET_OK;
 }
@@ -161,6 +153,16 @@ rmw_ret_t rmw_zp_service_type_support_init(
   return RMW_RET_OK;
 }
 
+// Fini
+rmw_ret_t rmw_zp_message_type_support_fini(rmw_zp_message_type_support_t *type_support,
+                                           rcutils_allocator_t *allocator) {
+  if (type_support->type_name != NULL) {
+    allocator->deallocate((char *)type_support->type_name, allocator->state);
+  }
+
+  return RMW_RET_OK;
+}
+
 rmw_ret_t rmw_zp_service_type_support_fini(rmw_zp_service_type_support_t *type_support,
                                            rcutils_allocator_t *allocator) {
   if (type_support->type_name != NULL) {
@@ -170,11 +172,23 @@ rmw_ret_t rmw_zp_service_type_support_fini(rmw_zp_service_type_support_t *type_s
   return RMW_RET_OK;
 }
 
-size_t rmw_zp_type_support_get_serialized_size(rmw_zp_message_type_support_t *type_support,
-                                               const void *ros_message) {
+// Get serialized size
+size_t rmw_zp_message_type_support_get_serialized_size(rmw_zp_message_type_support_t *type_support,
+                                                       const void *ros_message) {
   return CDR_HEADER_SIZE + type_support->callbacks->get_serialized_size(ros_message);
 }
 
+size_t rmw_zp_service_type_support_get_request_serialized_size(
+    rmw_zp_service_type_support_t *type_support, const void *ros_request) {
+  return CDR_HEADER_SIZE + type_support->request_callbacks->get_serialized_size(ros_request);
+}
+
+size_t rmw_zp_service_type_support_get_response_serialized_size(
+    rmw_zp_service_type_support_t *type_support, const void *ros_response) {
+  return CDR_HEADER_SIZE + type_support->response_callbacks->get_serialized_size(ros_response);
+}
+
+// Serialize
 rmw_ret_t rmw_zp_message_type_support_serialize(rmw_zp_message_type_support_t *type_support,
                                                 const void *ros_message, uint8_t *buf,
                                                 size_t buf_size) {
@@ -202,6 +216,7 @@ rmw_ret_t rmw_zp_message_type_support_serialize(rmw_zp_message_type_support_t *t
   return RMW_RET_OK;
 }
 
+// Deserialize
 rmw_ret_t rmw_zp_message_type_support_deserialize(rmw_zp_message_type_support_t *type_support,
                                                   const uint8_t *buf, size_t buf_size,
                                                   void *ros_message) {

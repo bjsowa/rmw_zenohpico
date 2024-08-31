@@ -1,3 +1,4 @@
+#include "detail/attachment_helpers.h"
 #include "detail/client.h"
 #include "detail/identifiers.h"
 #include "detail/node.h"
@@ -57,7 +58,7 @@ rmw_client_t* rmw_create_client(const rmw_node_t* node,
   RMW_CHECK_FOR_NULL_WITH_MSG(client_data, "failed to allocate memory for client data",
                               goto fail_allocate_client_data);
 
-  if (rmw_zp_client_init(client_data, qos_profile) != RMW_RET_OK) {
+  if (rmw_zp_client_init(client_data, qos_profile, allocator) != RMW_RET_OK) {
     goto fail_init_client_data;
   }
 
@@ -123,7 +124,7 @@ fail_allocate_client_name:
 fail_init_type_support:
   allocator->deallocate(client_data->type_support, allocator->state);
 fail_allocate_type_support:
-  rmw_zp_client_fini(client_data);
+  rmw_zp_client_fini(client_data, allocator);
 fail_init_client_data:
   allocator->deallocate(client_data, allocator->state);
 fail_allocate_client_data:
@@ -154,7 +155,7 @@ rmw_ret_t rmw_destroy_client(rmw_node_t* node, rmw_client_t* client) {
 
   allocator->deallocate(client_data->type_support, allocator->state);
 
-  if (rmw_zp_client_fini(client_data) != RMW_RET_OK) {
+  if (rmw_zp_client_fini(client_data, allocator) != RMW_RET_OK) {
     ret = RMW_RET_ERROR;
   }
 
@@ -185,12 +186,141 @@ rmw_ret_t rmw_client_response_subscription_get_actual_qos(const rmw_client_t* cl
 
 rmw_ret_t rmw_send_request(const rmw_client_t* client, const void* ros_request,
                            int64_t* sequence_id) {
-  return RMW_RET_UNSUPPORTED;
+  RMW_CHECK_ARGUMENT_FOR_NULL(client, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_ARGUMENT_FOR_NULL(client->data, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_ARGUMENT_FOR_NULL(ros_request, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_ARGUMENT_FOR_NULL(sequence_id, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(client, client->implementation_identifier, rmw_zp_identifier,
+                                   return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+
+  rmw_zp_client_t* client_data = client->data;
+
+  if (client_data->is_shutdown) {
+    return RMW_RET_ERROR;
+  }
+
+  rmw_context_impl_t* context_impl = client_data->context->impl;
+  rcutils_allocator_t* allocator = &(client_data->context->options.allocator);
+
+  // Serialize request
+  size_t serialized_size = rmw_zp_service_type_support_get_request_serialized_size(
+      client_data->type_support, ros_request);
+
+  uint8_t* request_bytes = allocator->allocate(serialized_size, allocator->state);
+  RMW_CHECK_FOR_NULL_WITH_MSG(request_bytes, "failed allocate request message bytes",
+                              return RMW_RET_BAD_ALLOC);
+
+  if (rmw_zp_service_type_support_serialize_request(client_data->type_support, ros_request,
+                                                    request_bytes, serialized_size) != RMW_RET_OK) {
+    goto fail_serialize_ros_request;
+  }
+
+  // Create attachment
+  int64_t sequence_number = rmw_zp_client_get_next_sequence_number(client_data);
+
+  zp_time_since_epoch time_since_epoch;
+  if (zp_get_time_since_epoch(&time_since_epoch) < 0) {
+    RMW_SET_ERROR_MSG("Zenoh-pico port does not support zp_get_time_since_epoch");
+    goto fail_get_time_since_epoch;
+  }
+
+  int64_t source_timestamp =
+      (int64_t)time_since_epoch.secs * 1000000000ll + (int64_t)time_since_epoch.nanos;
+
+  rmw_zp_attachment_data_t attachment_data = {.sequence_number = sequence_number,
+                                              .source_timestamp = source_timestamp};
+  memcpy(attachment_data.source_gid, client_data->client_gid, RMW_GID_STORAGE_SIZE);
+
+  z_owned_bytes_t attachment;
+  if (rmw_zp_attachment_data_serialize_to_zbytes(&attachment_data, &attachment) != RMW_RET_OK) {
+    goto fail_serialize_attachment;
+  }
+
+  z_get_options_t opts;
+  z_get_options_default(&opts);
+  opts.attachment = z_move(attachment);
+
+  // See the comment about the "num_in_flight" class variable in the
+  // rmw_client_data_t class for why we need to do this.
+  rmw_zp_client_increment_queries_in_flight(client_data);
+
+  opts.target = Z_QUERY_TARGET_ALL_COMPLETE;
+  // The default timeout for a z_get query is 10 seconds and if a response is
+  // not received within this window, the queryable will return an invalid
+  // reply. However, it is common for actions, which are implemented using
+  // services, to take an extended duration to complete. Hence, we set the
+  // timeout_ms to the largest supported value to account for most realistic
+  // scenarios.
+  opts.timeout_ms = UINT32_MAX;
+  // Latest consolidation guarantees unicity of replies for the same key
+  // expression, which optimizes bandwidth. The default is "None", which imples
+  // replies may come in any order and any number.
+  opts.consolidation = z_query_consolidation_latest();
+
+  z_owned_bytes_t payload;
+  z_bytes_from_static_buf(&payload, request_bytes, serialized_size);
+  opts.payload = z_move(payload);
+
+  z_owned_closure_reply_t callback;
+  z_closure(&callback, rmw_zp_client_data_handler, rmw_zp_client_data_dropper, client_data);
+
+  if (z_get(z_loan(context_impl->session), z_loan(client_data->keyexpr), "", z_move(callback),
+            &opts) < 0) {
+    RMW_SET_ERROR_MSG("Failed to send zenoh query");
+    goto fail_send_zenoh_query;
+  }
+
+  allocator->deallocate(request_bytes, allocator->state);
+
+  return RMW_RET_OK;
+
+fail_send_zenoh_query:
+  z_drop(opts.attachment);
+fail_serialize_attachment:
+fail_get_time_since_epoch:
+fail_serialize_ros_request:
+  allocator->deallocate(request_bytes, allocator->state);
+  return RMW_RET_ERROR;
 }
 
 rmw_ret_t rmw_take_response(const rmw_client_t* client, rmw_service_info_t* request_header,
                             void* ros_response, bool* taken) {
-  return RMW_RET_UNSUPPORTED;
+  RCUTILS_UNUSED(request_header);
+
+  RMW_CHECK_ARGUMENT_FOR_NULL(client, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_ARGUMENT_FOR_NULL(client->data, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_ARGUMENT_FOR_NULL(ros_response, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_ARGUMENT_FOR_NULL(taken, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(client, client->implementation_identifier, rmw_zp_identifier,
+                                   return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+  RMW_CHECK_FOR_NULL_WITH_MSG(client->service_name, "client has no service name",
+                              RMW_RET_INVALID_ARGUMENT);
+
+  *taken = false;
+
+  rmw_zp_client_t* client_data = client->data;
+
+  z_owned_slice_t reply_data;
+  if (rmw_zp_client_pop_next_reply(client_data, &reply_data) != RMW_RET_OK) {
+    // This tells rcl that the check for a new message was done, but no messages
+    // have come in yet.
+    return RMW_RET_OK;
+  }
+
+  const uint8_t* payload = z_slice_data(z_loan(reply_data));
+  const size_t payload_len = z_slice_len(z_loan(reply_data));
+
+  if (rmw_zp_service_type_support_deserialize_response(client_data->type_support, payload, payload_len, ros_response) != RMW_RET_OK) {
+    z_drop(z_move(reply_data));
+    return RMW_RET_ERROR;
+  }
+
+  // TODO(bjsowa): Fill the rest of the request_header
+
+  z_drop(z_move(reply_data));
+  *taken = true;
+
+  return RMW_RET_OK;
 }
 
 rmw_ret_t rmw_get_gid_for_client(const rmw_client_t* client, rmw_gid_t* gid) {
