@@ -80,8 +80,8 @@ rmw_client_t* rmw_create_client(const rmw_node_t* node,
   // Populate the rmw_client.
   rmw_client->implementation_identifier = rmw_zp_identifier;
   rmw_client->service_name = rcutils_strdup(service_name, *allocator);
-  RMW_CHECK_FOR_NULL_WITH_MSG(rmw_client->service_name, "failed to allocate client name",
-                              goto fail_allocate_client_name);
+  RMW_CHECK_FOR_NULL_WITH_MSG(rmw_client->service_name, "failed to allocate service name",
+                              goto fail_allocate_service_name);
 
   // Convert the type hash to a string so that it can be included in
   // the keyexpr.
@@ -119,7 +119,7 @@ fail_create_zenoh_key:
   allocator->deallocate(type_hash_c_str, allocator->state);
 fail_allocate_type_hash_c_str:
   allocator->deallocate((char*)rmw_client->service_name, allocator->state);
-fail_allocate_client_name:
+fail_allocate_service_name:
   rmw_zp_service_type_support_fini(client_data->type_support, allocator);
 fail_init_type_support:
   allocator->deallocate(client_data->type_support, allocator->state);
@@ -287,6 +287,8 @@ rmw_ret_t rmw_take_response(const rmw_client_t* client, rmw_service_info_t* requ
                             void* ros_response, bool* taken) {
   RCUTILS_UNUSED(request_header);
 
+  *taken = false;
+
   RMW_CHECK_ARGUMENT_FOR_NULL(client, RMW_RET_INVALID_ARGUMENT);
   RMW_CHECK_ARGUMENT_FOR_NULL(client->data, RMW_RET_INVALID_ARGUMENT);
   RMW_CHECK_ARGUMENT_FOR_NULL(ros_response, RMW_RET_INVALID_ARGUMENT);
@@ -295,8 +297,6 @@ rmw_ret_t rmw_take_response(const rmw_client_t* client, rmw_service_info_t* requ
                                    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
   RMW_CHECK_FOR_NULL_WITH_MSG(client->service_name, "client has no service name",
                               RMW_RET_INVALID_ARGUMENT);
-
-  *taken = false;
 
   rmw_zp_client_t* client_data = client->data;
 
@@ -310,7 +310,8 @@ rmw_ret_t rmw_take_response(const rmw_client_t* client, rmw_service_info_t* requ
   const uint8_t* payload = z_slice_data(z_loan(reply_data));
   const size_t payload_len = z_slice_len(z_loan(reply_data));
 
-  if (rmw_zp_service_type_support_deserialize_response(client_data->type_support, payload, payload_len, ros_response) != RMW_RET_OK) {
+  if (rmw_zp_service_type_support_deserialize_response(client_data->type_support, payload,
+                                                       payload_len, ros_response) != RMW_RET_OK) {
     z_drop(z_move(reply_data));
     return RMW_RET_ERROR;
   }
