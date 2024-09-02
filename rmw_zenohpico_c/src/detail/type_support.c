@@ -189,9 +189,8 @@ size_t rmw_zp_service_type_support_get_response_serialized_size(
 }
 
 // Serialize
-rmw_ret_t rmw_zp_message_type_support_serialize(rmw_zp_message_type_support_t *type_support,
-                                                const void *ros_message, uint8_t *buf,
-                                                size_t buf_size) {
+static rmw_ret_t serialize_message(const message_type_support_callbacks_t *type_support_callbacks,
+                                   const void *ros_message, uint8_t *buf, size_t buf_size) {
   if (buf_size < CDR_HEADER_SIZE) {
     RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
         "Cannot serialize the message into buffer of size: %zu. Must have space for a 4-byte "
@@ -208,7 +207,7 @@ rmw_ret_t rmw_zp_message_type_support_serialize(rmw_zp_message_type_support_t *t
 
   ucdrBuffer ub;
   ucdr_init_buffer_origin_offset(&ub, buf, buf_size, CDR_HEADER_SIZE, CDR_HEADER_SIZE);
-  if (!type_support->callbacks->cdr_serialize(ros_message, &ub)) {
+  if (!type_support_callbacks->cdr_serialize(ros_message, &ub)) {
     RMW_SET_ERROR_MSG("Type support failed to serialize the message");
     return RMW_RET_ERROR;
   }
@@ -216,10 +215,27 @@ rmw_ret_t rmw_zp_message_type_support_serialize(rmw_zp_message_type_support_t *t
   return RMW_RET_OK;
 }
 
+rmw_ret_t rmw_zp_message_type_support_serialize(rmw_zp_message_type_support_t *type_support,
+                                                const void *ros_message, uint8_t *buf,
+                                                size_t buf_size) {
+  return serialize_message(type_support->callbacks, ros_message, buf, buf_size);
+}
+
+rmw_ret_t rmw_zp_service_type_support_serialize_request(rmw_zp_service_type_support_t *type_support,
+                                                        const void *ros_request, uint8_t *buf,
+                                                        size_t buf_size) {
+  return serialize_message(type_support->request_callbacks, ros_request, buf, buf_size);
+}
+
+rmw_ret_t rmw_zp_service_type_support_serialize_response(
+    rmw_zp_service_type_support_t *type_support, const void *ros_response, uint8_t *buf,
+    size_t buf_size) {
+  return serialize_message(type_support->response_callbacks, ros_response, buf, buf_size);
+}
+
 // Deserialize
-rmw_ret_t rmw_zp_message_type_support_deserialize(rmw_zp_message_type_support_t *type_support,
-                                                  const uint8_t *buf, size_t buf_size,
-                                                  void *ros_message) {
+static rmw_ret_t deserialize_message(const message_type_support_callbacks_t *type_support_callbacks,
+                                     const uint8_t *buf, size_t buf_size, void *ros_message) {
   if (buf_size < CDR_HEADER_SIZE) {
     RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
         "Cannot deserialize buffer of size: %zu. Must contain at least a 4-byte header", buf_size);
@@ -237,10 +253,28 @@ rmw_ret_t rmw_zp_message_type_support_deserialize(rmw_zp_message_type_support_t 
   ucdrBuffer ub;
   ucdr_init_buffer_origin_offset_endian(&ub, (uint8_t *)buf, buf_size, CDR_HEADER_SIZE,
                                         CDR_HEADER_SIZE, endianness);
-  if (!type_support->callbacks->cdr_deserialize(&ub, ros_message)) {
+  if (!type_support_callbacks->cdr_deserialize(&ub, ros_message)) {
     RMW_SET_ERROR_MSG("Type support failed to deserialize the message");
     return RMW_RET_ERROR;
   }
 
   return RMW_RET_OK;
+}
+
+rmw_ret_t rmw_zp_message_type_support_deserialize(rmw_zp_message_type_support_t *type_support,
+                                                  const uint8_t *buf, size_t buf_size,
+                                                  void *ros_message) {
+  return deserialize_message(type_support->callbacks, buf, buf_size, ros_message);
+}
+
+rmw_ret_t rmw_zp_service_type_support_deserialize_request(
+    rmw_zp_service_type_support_t *type_support, const uint8_t *buf, size_t buf_size,
+    void *ros_request) {
+  return deserialize_message(type_support->request_callbacks, buf, buf_size, ros_request);
+}
+
+rmw_ret_t rmw_zp_service_type_support_deserialize_response(
+    rmw_zp_service_type_support_t *type_support, const uint8_t *buf, size_t buf_size,
+    void *ros_response) {
+  return deserialize_message(type_support->response_callbacks, buf, buf_size, ros_response);
 }
