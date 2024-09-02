@@ -37,6 +37,7 @@ set(SRCS
   src/rmw_publisher.c
   src/rmw_publish.c
   src/rmw_serialize.c
+  src/rmw_service.c
   src/rmw_subscription.c
   src/rmw_take.c
   src/rmw_wait_set.c
