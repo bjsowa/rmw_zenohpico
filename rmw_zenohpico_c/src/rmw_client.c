@@ -216,7 +216,7 @@ rmw_ret_t rmw_send_request(const rmw_client_t* client, const void* ros_request,
   }
 
   // Create attachment
-  int64_t sequence_number = rmw_zp_client_get_next_sequence_number(client_data);
+  *sequence_id = rmw_zp_client_get_next_sequence_number(client_data);
 
   zp_time_since_epoch time_since_epoch;
   if (zp_get_time_since_epoch(&time_since_epoch) < 0) {
@@ -227,7 +227,7 @@ rmw_ret_t rmw_send_request(const rmw_client_t* client, const void* ros_request,
   int64_t source_timestamp =
       (int64_t)time_since_epoch.secs * 1000000000ll + (int64_t)time_since_epoch.nanos;
 
-  rmw_zp_attachment_data_t attachment_data = {.sequence_number = sequence_number,
+  rmw_zp_attachment_data_t attachment_data = {.sequence_number = *sequence_id,
                                               .source_timestamp = source_timestamp};
   memcpy(attachment_data.source_gid, client_data->client_gid, RMW_GID_STORAGE_SIZE);
 
