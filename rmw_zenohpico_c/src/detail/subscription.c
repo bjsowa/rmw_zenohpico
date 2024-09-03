@@ -79,7 +79,7 @@ rmw_ret_t rmw_zp_subscription_add_new_message(rmw_zp_subscription_t* subscriptio
     }
   }
 
-  if (rmw_zp_message_queue_push_back(&subscription->message_queue, attachment, payload) !=
+  if (rmw_zp_message_queue_push_back(&subscription->message_queue, attachment, payload, NULL) !=
       RMW_RET_OK) {
     z_mutex_unlock(z_loan_mut(subscription->message_queue_mutex));
     return RMW_RET_ERROR;

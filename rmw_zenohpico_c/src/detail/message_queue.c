@@ -56,7 +56,8 @@ rmw_ret_t rmw_zp_message_queue_pop_front(rmw_zp_message_queue_t *message_queue,
 
 rmw_ret_t rmw_zp_message_queue_push_back(rmw_zp_message_queue_t *message_queue,
                                          const z_loaned_bytes_t *attachment,
-                                         const z_loaned_bytes_t *payload) {
+                                         const z_loaned_bytes_t *payload,
+                                         const rmw_zp_message_t **message) {
   if (message_queue->size == message_queue->capacity) {
     RMW_SET_ERROR_MSG("Trying to push messages to a queue that is full");
     return RMW_RET_ERROR;
@@ -79,6 +80,10 @@ rmw_ret_t rmw_zp_message_queue_push_back(rmw_zp_message_queue_t *message_queue,
   message_queue->idx_back++;
   if (message_queue->idx_back == message_queue->capacity) {
     message_queue->idx_back = 0;
+  }
+
+  if (message != NULL) {
+    *message = back_message;
   }
 
   return RMW_RET_OK;

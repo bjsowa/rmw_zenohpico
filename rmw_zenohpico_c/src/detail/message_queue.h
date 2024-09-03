@@ -30,6 +30,7 @@ rmw_ret_t rmw_zp_message_queue_pop_front(rmw_zp_message_queue_t *message_queue,
 
 rmw_ret_t rmw_zp_message_queue_push_back(rmw_zp_message_queue_t *message_queue,
                                          const z_loaned_bytes_t *attachment,
-                                         const z_loaned_bytes_t *payload);
+                                         const z_loaned_bytes_t *payload,
+                                         const rmw_zp_message_t **message);
 
 #endif

@@ -157,7 +157,8 @@ rmw_ret_t rmw_zp_client_add_new_reply(rmw_zp_client_t* client, const z_loaned_by
     }
   }
 
-  if (rmw_zp_message_queue_push_back(&client->reply_queue, attachment, payload) != RMW_RET_OK) {
+  if (rmw_zp_message_queue_push_back(&client->reply_queue, attachment, payload, NULL) !=
+      RMW_RET_OK) {
     z_mutex_unlock(z_loan_mut(client->reply_queue_mutex));
     return RMW_RET_ERROR;
   }
