@@ -199,7 +199,49 @@ rmw_ret_t rmw_service_response_publisher_get_actual_qos(const rmw_service_t* ser
 
 rmw_ret_t rmw_take_request(const rmw_service_t* service, rmw_service_info_t* request_header,
                            void* ros_request, bool* taken) {
-  return RMW_RET_UNSUPPORTED;
+  *taken = false;
+
+  RMW_CHECK_ARGUMENT_FOR_NULL(service, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_ARGUMENT_FOR_NULL(service->data, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_ARGUMENT_FOR_NULL(request_header, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_ARGUMENT_FOR_NULL(ros_request, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_ARGUMENT_FOR_NULL(taken, RMW_RET_INVALID_ARGUMENT);
+
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(service, service->implementation_identifier, rmw_zp_identifier,
+                                   return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+
+  RMW_CHECK_FOR_NULL_WITH_MSG(service->service_name, "service has no service name",
+                              RMW_RET_INVALID_ARGUMENT);
+
+  rmw_zp_service_t* service_data = service->data;
+
+  rmw_zp_message_t query_data;
+  if (rmw_zp_service_pop_next_query(service_data, &query_data) != RMW_RET_OK) {
+    return RMW_RET_ERROR;
+  }
+
+  const uint8_t* payload = z_slice_data(z_loan(query_data.payload));
+  const size_t payload_len = z_slice_len(z_loan(query_data.payload));
+
+  if (rmw_zp_service_type_support_deserialize_request(service_data->type_support, payload,
+                                                      payload_len, ros_request) != RMW_RET_OK) {
+    z_drop(z_move(query_data.payload));
+    return RMW_RET_ERROR;
+  }
+
+  z_drop(z_move(query_data.payload));
+
+  request_header->request_id.sequence_number = query_data.attachment_data.sequence_number;
+  request_header->source_timestamp = query_data.attachment_data.source_timestamp;
+  memcpy(request_header->request_id.writer_guid, query_data.attachment_data.source_gid,
+         RMW_GID_STORAGE_SIZE);
+
+  // TODO(bjsowa): Fill missing service info
+  // request_header->received_timestamp = ?
+
+  *taken = true;
+
+  return RMW_RET_OK;
 }
 
 rmw_ret_t rmw_send_response(const rmw_service_t* service, rmw_request_id_t* request_header,

@@ -2,6 +2,7 @@
 #define RMW_ZENOHPICO_DETAIL__SERVICE_H_
 
 #include "./message_queue.h"
+#include "./query_map.h"
 #include "./type_support.h"
 #include "rmw/rmw.h"
 #include "zenoh-pico.h"
@@ -21,12 +22,9 @@ typedef struct {
 
   rmw_context_t* context;
 
-  rmw_zp_message_queue_t query_queue;
-  z_owned_mutex_t query_queue_mutex;
-
-  // ? sequence_to_query_map;
-  z_owned_mutex_t sequence_to_query_map_mutex;
-
+  rmw_zp_message_queue_t message_queue;
+  rmw_zp_query_map_t query_map;
+  z_owned_mutex_t message_queue_mutex;
 } rmw_zp_service_t;
 
 rmw_ret_t rmw_zp_service_init(rmw_zp_service_t* service, const rmw_qos_profile_t* qos_profile,
@@ -34,6 +32,13 @@ rmw_ret_t rmw_zp_service_init(rmw_zp_service_t* service, const rmw_qos_profile_t
 
 rmw_ret_t rmw_zp_service_fini(rmw_zp_service_t* service, rcutils_allocator_t* allocator);
 
-void rmw_zp_service_data_handler(const z_loaned_query_t* query, void* service_data);
+void rmw_zp_service_data_handler(const z_loaned_query_t* query, void* data);
+
+rmw_ret_t rmw_zp_service_add_new_query(rmw_zp_service_t* service,
+                                       const z_loaned_bytes_t* attachment,
+                                       const z_loaned_bytes_t* payload,
+                                       const z_loaned_query_t* query);
+
+rmw_ret_t rmw_zp_service_pop_next_query(rmw_zp_service_t* service, rmw_zp_message_t* query_data);
 
 #endif
