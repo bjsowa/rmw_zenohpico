@@ -55,3 +55,10 @@ rmw_ret_t rmw_zp_attachment_data_deserialize_from_zbytes(
 
   return RMW_RET_ERROR;
 }
+
+void rmw_zp_attachment_data_clone(const rmw_zp_attachment_data_t *attachment_data_src,
+                                  rmw_zp_attachment_data_t *attachment_data_dst) {
+  attachment_data_dst->sequence_number = attachment_data_src->sequence_number;
+  attachment_data_dst->source_timestamp = attachment_data_src->source_timestamp;
+  memcpy(attachment_data_dst->source_gid, attachment_data_src->source_gid, RMW_GID_STORAGE_SIZE);
+}

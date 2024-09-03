@@ -18,4 +18,7 @@ rmw_ret_t rmw_zp_attachment_data_serialize_to_zbytes(
 rmw_ret_t rmw_zp_attachment_data_deserialize_from_zbytes(const z_loaned_bytes_t* attachment,
                                                          rmw_zp_attachment_data_t* attachment_data);
 
+void rmw_zp_attachment_data_clone(const rmw_zp_attachment_data_t* attachment_data_src,
+                                  rmw_zp_attachment_data_t* attachment_data_dst);
+
 #endif

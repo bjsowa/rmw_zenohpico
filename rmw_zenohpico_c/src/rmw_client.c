@@ -300,25 +300,30 @@ rmw_ret_t rmw_take_response(const rmw_client_t* client, rmw_service_info_t* requ
 
   rmw_zp_client_t* client_data = client->data;
 
-  z_owned_slice_t reply_data;
+  rmw_zp_message_t reply_data;
   if (rmw_zp_client_pop_next_reply(client_data, &reply_data) != RMW_RET_OK) {
     // This tells rcl that the check for a new message was done, but no messages
     // have come in yet.
     return RMW_RET_OK;
   }
 
-  const uint8_t* payload = z_slice_data(z_loan(reply_data));
-  const size_t payload_len = z_slice_len(z_loan(reply_data));
+  const uint8_t* payload = z_slice_data(z_loan(reply_data.payload));
+  const size_t payload_len = z_slice_len(z_loan(reply_data.payload));
 
   if (rmw_zp_service_type_support_deserialize_response(client_data->type_support, payload,
                                                        payload_len, ros_response) != RMW_RET_OK) {
-    z_drop(z_move(reply_data));
+    z_drop(z_move(reply_data.payload));
     return RMW_RET_ERROR;
   }
 
+  request_header->request_id.sequence_number = reply_data.attachment_data.sequence_number;
+  request_header->source_timestamp = reply_data.attachment_data.source_timestamp;
+  memcpy(request_header->request_id.writer_guid, reply_data.attachment_data.source_gid,
+         RMW_GID_STORAGE_SIZE);
   // TODO(bjsowa): Fill the rest of the request_header
+  // request_header->received_timestamp = ?
 
-  z_drop(z_move(reply_data));
+  z_drop(z_move(reply_data.payload));
   *taken = true;
 
   return RMW_RET_OK;

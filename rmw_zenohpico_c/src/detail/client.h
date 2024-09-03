@@ -66,10 +66,9 @@ void rmw_zp_client_decrement_queries_in_flight(rmw_zp_client_t* client, bool* qu
 void rmw_zp_client_data_handler(const z_loaned_reply_t* reply, void* data);
 void rmw_zp_client_data_dropper(void* data);
 
-rmw_ret_t rmw_zp_client_add_new_reply(rmw_zp_client_t* client,
-                                      rmw_zp_attachment_data_t* attachment_data,
-                                      z_moved_slice_t* payload);
+rmw_ret_t rmw_zp_client_add_new_reply(rmw_zp_client_t* client, const z_loaned_bytes_t* attachment,
+                                      const z_loaned_bytes_t* payload);
 
-rmw_ret_t rmw_zp_client_pop_next_reply(rmw_zp_client_t* client, z_owned_slice_t* reply_data);
+rmw_ret_t rmw_zp_client_pop_next_reply(rmw_zp_client_t* client, rmw_zp_message_t* reply_data);
 
 #endif

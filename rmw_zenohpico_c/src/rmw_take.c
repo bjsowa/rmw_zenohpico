@@ -11,33 +11,33 @@
 
 static rmw_ret_t take_one(rmw_zp_subscription_t* sub_data, void* ros_message, bool* taken,
                           rmw_message_info_t* message_info) {
-  z_owned_slice_t msg_data;
+  rmw_zp_message_t msg_data;
   if (rmw_zp_subscription_pop_next_message(sub_data, &msg_data) != RMW_RET_OK) {
     return RMW_RET_ERROR;
   }
 
-  const uint8_t* payload = z_slice_data(z_loan(msg_data));
-  const size_t payload_len = z_slice_len(z_loan(msg_data));
+  const uint8_t* payload = z_slice_data(z_loan(msg_data.payload));
+  const size_t payload_len = z_slice_len(z_loan(msg_data.payload));
 
   if (rmw_zp_message_type_support_deserialize(sub_data->type_support, payload, payload_len,
                                               ros_message) != RMW_RET_OK) {
-    z_drop(z_move(msg_data));
+    z_drop(z_move(msg_data.payload));
     return RMW_RET_ERROR;
   }
 
-  z_drop(z_move(msg_data));
+  z_drop(z_move(msg_data.payload));
 
   if (message_info != NULL) {
     message_info->reception_sequence_number = 0;
     message_info->publisher_gid.implementation_identifier = rmw_zp_identifier;
     message_info->from_intra_process = false;
+    message_info->source_timestamp = msg_data.attachment_data.source_timestamp;
+    message_info->publication_sequence_number = msg_data.attachment_data.sequence_number;
+    memcpy(message_info->publisher_gid.data, msg_data.attachment_data.source_gid,
+           RMW_GID_STORAGE_SIZE);
 
     // TODO: Fill the rest of message info
-    // message_info->source_timestamp = msg_data->source_timestamp;
     // message_info->received_timestamp = msg_data->recv_timestamp;
-    // message_info->publication_sequence_number = msg_data->sequence_number;
-    // memcpy(message_info->publisher_gid.data, msg_data->publisher_gid,
-    //          RMW_GID_STORAGE_SIZE);
   }
 
   *taken = true;
@@ -48,13 +48,13 @@ static rmw_ret_t take_one(rmw_zp_subscription_t* sub_data, void* ros_message, bo
 static rmw_ret_t take_one_serialized(rmw_zp_subscription_t* sub_data,
                                      rmw_serialized_message_t* serialized_message, bool* taken,
                                      rmw_message_info_t* message_info) {
-  z_owned_slice_t msg_data;
+  rmw_zp_message_t msg_data;
   if (rmw_zp_subscription_pop_next_message(sub_data, &msg_data) != RMW_RET_OK) {
     return RMW_RET_ERROR;
   }
 
-  const uint8_t* payload = z_slice_data(z_loan(msg_data));
-  const size_t payload_len = z_slice_len(z_loan(msg_data));
+  const uint8_t* payload = z_slice_data(z_loan(msg_data.payload));
+  const size_t payload_len = z_slice_len(z_loan(msg_data.payload));
 
   if (serialized_message->buffer_capacity < payload_len) {
     rmw_ret_t ret = rmw_serialized_message_resize(serialized_message, payload_len);
@@ -71,13 +71,13 @@ static rmw_ret_t take_one_serialized(rmw_zp_subscription_t* sub_data,
     message_info->reception_sequence_number = 0;
     message_info->publisher_gid.implementation_identifier = rmw_zp_identifier;
     message_info->from_intra_process = false;
+    message_info->source_timestamp = msg_data.attachment_data.source_timestamp;
+    message_info->publication_sequence_number = msg_data.attachment_data.sequence_number;
+    memcpy(message_info->publisher_gid.data, msg_data.attachment_data.source_gid,
+           RMW_GID_STORAGE_SIZE);
 
     // TODO: Fill the rest of message info
-    // message_info->source_timestamp = msg_data->source_timestamp;
     // message_info->received_timestamp = msg_data->recv_timestamp;
-    // message_info->publication_sequence_number = msg_data->sequence_number;
-    // memcpy(message_info->publisher_gid.data, msg_data->publisher_gid,
-    //          RMW_GID_STORAGE_SIZE);
   }
 
   return RMW_RET_OK;

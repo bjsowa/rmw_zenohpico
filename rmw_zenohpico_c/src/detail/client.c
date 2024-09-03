@@ -109,28 +109,15 @@ void rmw_zp_client_data_handler(const z_loaned_reply_t* reply, void* data) {
 
   const z_loaned_sample_t* sample = z_reply_ok(reply);
 
-  rmw_zp_attachment_data_t attachment_data;
-
   const z_loaned_bytes_t* attachment = z_sample_attachment(sample);
   if (!_z_bytes_check(attachment)) {
     // TODO(bjsowa): report error
-    // Set fallback attachment data
-    attachment_data.sequence_number = 0;
-    attachment_data.source_timestamp = 0;
-    memset(attachment_data.source_gid, 0, RMW_GID_STORAGE_SIZE);
-  } else if (rmw_zp_attachment_data_deserialize_from_zbytes(attachment, &attachment_data) !=
-             RMW_RET_OK) {
-    // Deserialize method will set default values for attachment data it fails to deserialize
-    // TODO(bjsowa): report error
+    return;
   }
 
   const z_loaned_bytes_t* payload = z_sample_payload(sample);
 
-  // TODO(bjsowa): avoid dynamic allocation
-  z_owned_slice_t slice;
-  z_bytes_deserialize_into_slice(payload, &slice);
-
-  if (rmw_zp_client_add_new_reply(client_data, &attachment_data, z_move(slice)) != RMW_RET_OK) {
+  if (rmw_zp_client_add_new_reply(client_data, attachment, payload) != RMW_RET_OK) {
     // TODO(bjsowa): report error
   }
 }
@@ -156,11 +143,8 @@ void rmw_zp_client_data_dropper(void* data) {
   }
 }
 
-rmw_ret_t rmw_zp_client_add_new_reply(rmw_zp_client_t* client,
-                                      rmw_zp_attachment_data_t* attachment_data,
-                                      z_moved_slice_t* payload) {
-  RCUTILS_UNUSED(attachment_data);
-
+rmw_ret_t rmw_zp_client_add_new_reply(rmw_zp_client_t* client, const z_loaned_bytes_t* attachment,
+                                      const z_loaned_bytes_t* payload) {
   z_mutex_lock(z_loan_mut(client->reply_queue_mutex));
 
   if (client->reply_queue.size >= client->adapted_qos_profile.depth) {
@@ -173,7 +157,7 @@ rmw_ret_t rmw_zp_client_add_new_reply(rmw_zp_client_t* client,
     }
   }
 
-  if (rmw_zp_message_queue_push_back(&client->reply_queue, payload) != RMW_RET_OK) {
+  if (rmw_zp_message_queue_push_back(&client->reply_queue, attachment, payload) != RMW_RET_OK) {
     z_mutex_unlock(z_loan_mut(client->reply_queue_mutex));
     return RMW_RET_ERROR;
   }
@@ -183,7 +167,7 @@ rmw_ret_t rmw_zp_client_add_new_reply(rmw_zp_client_t* client,
   return RMW_RET_OK;
 }
 
-rmw_ret_t rmw_zp_client_pop_next_reply(rmw_zp_client_t* client, z_owned_slice_t* reply_data) {
+rmw_ret_t rmw_zp_client_pop_next_reply(rmw_zp_client_t* client, rmw_zp_message_t* reply_data) {
   z_mutex_lock(z_loan_mut(client->reply_queue_mutex));
 
   if (client->reply_queue.size == 0) {
