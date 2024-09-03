@@ -21,7 +21,9 @@ set(SRCS
   src/detail/node.c
   src/detail/publisher.c
   src/detail/qos.c
+  src/detail/query_map.c
   src/detail/ros_topic_name_to_zenoh_key.c
+  src/detail/service.c
   src/detail/subscription.c
   src/detail/type_support.c
   src/detail/wait_set.c
