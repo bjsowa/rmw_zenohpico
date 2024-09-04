@@ -22,4 +22,7 @@ rmw_ret_t rmw_zp_query_map_fini(rmw_zp_query_map_t* query_map, rcutils_allocator
 rmw_ret_t rmw_zp_query_map_insert(rmw_zp_query_map_t* query_map, const z_loaned_query_t* query,
                                   int64_t sequence_number, const uint8_t* writer_guid);
 
+rmw_ret_t rmw_zp_query_map_extract(rmw_zp_query_map_t* query_map, int64_t sequence_number,
+                                   const uint8_t* writer_guid, const z_loaned_query_t** query);
+
 #endif

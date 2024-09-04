@@ -92,3 +92,20 @@ rmw_ret_t rmw_zp_query_map_insert(rmw_zp_query_map_t* query_map, const z_loaned_
   RMW_SET_ERROR_MSG("Query map full");
   return RMW_RET_ERROR;
 }
+
+rmw_ret_t rmw_zp_query_map_extract(rmw_zp_query_map_t* query_map, int64_t sequence_number,
+                                   const uint8_t* writer_guid, const z_loaned_query_t** query) {
+  const uint32_t hash = get_query_id_hash(sequence_number, writer_guid);
+
+  int key_index = get_index(query_map, hash);
+  if (key_index == -1) {
+    RMW_SET_ERROR_MSG("Could not find query in the query map");
+    return RMW_RET_ERROR;
+  }
+
+  query_map->keys[key_index] = 0;
+
+  *query = query_map->queries[key_index];
+
+  return RMW_RET_OK;
+}
