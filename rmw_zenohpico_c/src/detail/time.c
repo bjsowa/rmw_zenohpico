@@ -1,5 +1,6 @@
 #include "./time.h"
 
+#include "rmw/error_handling.h"
 #include "zenoh-pico.h"
 
 rmw_ret_t rmw_zp_get_current_timestamp(int64_t *timestamp) {
