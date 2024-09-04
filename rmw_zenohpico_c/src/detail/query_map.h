@@ -11,7 +11,6 @@ typedef struct {
   uint32_t* keys;
   const z_loaned_query_t** queries;
   size_t capacity;
-  size_t size; // TODO(bjsowa): Do we need this?
 } rmw_zp_query_map_t;
 
 rmw_ret_t rmw_zp_query_map_init(rmw_zp_query_map_t* query_map, size_t capacity,

@@ -34,7 +34,6 @@ static int get_index(rmw_zp_query_map_t* query_map, uint32_t key) {
 rmw_ret_t rmw_zp_query_map_init(rmw_zp_query_map_t* query_map, size_t capacity,
                                 rcutils_allocator_t* allocator) {
   query_map->capacity = capacity;
-  query_map->size = 0;
 
   query_map->keys = allocator->zero_allocate(capacity, sizeof(uint32_t), allocator->state);
 
