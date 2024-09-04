@@ -142,7 +142,7 @@ rmw_publisher_t *rmw_create_publisher(const rmw_node_t *node,
   z_view_keyexpr_t keyexpr;
   z_view_keyexpr_from_str(&keyexpr, keyexpr_c_str);
 
-  // TODO: Create a Publication Cache if durability is transient_local.
+  // TODO(bjsowa): Create a Publication Cache if durability is transient_local.
 
   // Set congestion_control to BLOCK if appropriate.
   z_publisher_options_t opts;
@@ -159,7 +159,7 @@ rmw_publisher_t *rmw_create_publisher(const rmw_node_t *node,
     goto fail_create_zenoh_publisher;
   }
 
-  // TODO: liveliness token stuff
+  // TODO(bjsowa): liveliness token stuff
 
   allocator->deallocate((char *)keyexpr_c_str, allocator->state);
   allocator->deallocate(type_hash_c_str, allocator->state);
@@ -245,7 +245,7 @@ rmw_ret_t rmw_publisher_count_matched_subscriptions(const rmw_publisher_t *publi
                                                     size_t *subscription_count) {
   RCUTILS_UNUSED(publisher);
   RCUTILS_UNUSED(subscription_count);
-  // TODO
+  // TODO(bjsowa): implement once graph cache is working
   return RMW_RET_ERROR;
 }
 

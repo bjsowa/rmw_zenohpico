@@ -49,9 +49,7 @@ rmw_ret_t rmw_zp_attachment_data_deserialize_from_zbytes(
   attachment_data->source_timestamp = 0;
   memset(attachment_data->source_gid, 0, RMW_GID_STORAGE_SIZE);
 
-  // TODO: Attachments in rmw_zenoh right now are only used to detect lost messages by checking if
-  // sequence numbers associated with publisher GID are monotonically increasing. Do we need to
-  // implement this in rmw_zenohpico?
+  // TODO(bjsowa)
 
   return RMW_RET_ERROR;
 }

@@ -117,7 +117,7 @@ rmw_subscription_t* rmw_create_subscription(
   z_owned_closure_sample_t callback;
   z_closure(&callback, rmw_zp_sub_data_handler, NULL, sub_data);
 
-  // TODO: support transient local qos via querying subscriber
+  // TODO(bjsowa): support transient local qos via querying subscriber
   z_subscriber_options_t sub_options;
   z_subscriber_options_default(&sub_options);
 #ifdef Z_FEATURE_UNSTABLE_API
@@ -197,7 +197,7 @@ rmw_ret_t rmw_subscription_count_matched_publishers(const rmw_subscription_t* su
                                                     size_t* publisher_count) {
   RCUTILS_UNUSED(subscription);
   RCUTILS_UNUSED(publisher_count);
-  // TODO
+  // TODO(bjsowa): implement once graph cache is working
   return RMW_RET_ERROR;
 }
 

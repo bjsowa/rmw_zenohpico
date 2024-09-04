@@ -59,20 +59,20 @@ rmw_ret_t rmw_zp_service_fini(rmw_zp_service_t* service, rcutils_allocator_t* al
 void rmw_zp_service_data_handler(const z_loaned_query_t* query, void* data) {
   rmw_zp_service_t* service_data = data;
   if (service_data == NULL) {
-    // TODO: report error
+    // TODO(bjsowa): report error
     return;
   }
 
   const z_loaned_bytes_t* attachment = z_query_attachment(query);
   if (!_z_bytes_check(attachment)) {
-    // TODO: report error
+    // TODO(bjsowa): report error
     return;
   }
 
   const z_loaned_bytes_t* payload = z_query_payload(query);
 
   if (rmw_zp_service_add_new_query(service_data, attachment, payload, query) != RMW_RET_OK) {
-    // TODO: report error
+    // TODO(bjsowa): report error
   }
 }
 
@@ -83,7 +83,7 @@ rmw_ret_t rmw_zp_service_add_new_query(rmw_zp_service_t* service,
   z_mutex_lock(z_loan_mut(service->message_queue_mutex));
 
   if (service->message_queue.size >= service->adapted_qos_profile.depth) {
-    // TODO: Log warning if message is discarded due to hitting the queue depth
+    // TODO(bjsowa): Log warning if message is discarded due to hitting the queue depth
 
     // Adapted QoS has depth guaranteed to be >= 1
     if (rmw_zp_message_queue_pop_front(&service->message_queue, NULL) != RMW_RET_OK) {

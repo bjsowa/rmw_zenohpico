@@ -63,7 +63,7 @@ rmw_node_t *rmw_create_node(rmw_context_t *context, const char *name, const char
   RMW_CHECK_FOR_NULL_WITH_MSG(node_data, "failed to allocate memory for node data",
                               goto fail_allocate_node_data;);
 
-  // TODO: Initialize liveliness token for the node to advertise that a new node is in town.
+  // TODO(bjsowa): Initialize liveliness token for the node to advertise that a new node is in town.
   if (rmw_zp_node_init(node_data) != RMW_RET_OK) {
     goto fail_init_node_data;
   }
@@ -101,7 +101,7 @@ rmw_ret_t rmw_destroy_node(rmw_node_t *node) {
 
   rmw_zp_node_t *node_data = (rmw_zp_node_t *)node->data;
   if (node_data != NULL) {
-    // TODO: Undeclare liveliness token for the node to advertise that the node has ridden off into
+    // TODO(bjsowa): Undeclare liveliness token for the node to advertise that the node has ridden off into
     // the sunset.
     rmw_zp_node_fini(node_data);
     allocator->deallocate(node_data, allocator->state);

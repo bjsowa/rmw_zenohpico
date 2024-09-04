@@ -47,20 +47,20 @@ rmw_ret_t rmw_zp_subscription_fini(rmw_zp_subscription_t* subscription,
 void rmw_zp_sub_data_handler(const z_loaned_sample_t* sample, void* data) {
   rmw_zp_subscription_t* sub_data = data;
   if (sub_data == NULL) {
-    // TODO: report error
+    // TODO(bjsowa): report error
     return;
   }
 
   const z_loaned_bytes_t* attachment = z_sample_attachment(sample);
   if (!_z_bytes_check(attachment)) {
-    // TODO: report error
+    // TODO(bjsowa): report error
     return;
   }
 
   const z_loaned_bytes_t* payload = z_sample_payload(sample);
 
   if (rmw_zp_subscription_add_new_message(sub_data, attachment, payload) != RMW_RET_OK) {
-    // TODO: report error
+    // TODO(bjsowa): report error
   }
 }
 
@@ -70,7 +70,7 @@ rmw_ret_t rmw_zp_subscription_add_new_message(rmw_zp_subscription_t* subscriptio
   z_mutex_lock(z_loan_mut(subscription->message_queue_mutex));
 
   if (subscription->message_queue.size >= subscription->adapted_qos_profile.depth) {
-    // TODO: Log warning if message is discarded due to hitting the queue depth
+    // TODO(bjsowa): Log warning if message is discarded due to hitting the queue depth
 
     // Adapted QoS has depth guaranteed to be >= 1
     if (rmw_zp_message_queue_pop_front(&subscription->message_queue, NULL) != RMW_RET_OK) {

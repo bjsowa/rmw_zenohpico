@@ -27,7 +27,7 @@ static bool check_and_attach_condition(const rmw_subscriptions_t *const subscrip
   if (events) {
     for (size_t i = 0; i < events->event_count; ++i) {
       rmw_event_t *event = events->events[i];
-      // TODO
+      // TODO(bjsowa)
       //       rmw_zenoh_cpp::rmw_zenoh_event_type_t zenoh_event_type =
       //           rmw_zenoh_cpp::zenoh_event_from_rmw_event(event->event_type);
       //       if (zenoh_event_type == rmw_zenoh_cpp::ZENOH_EVENT_INVALID) {
@@ -53,7 +53,7 @@ static bool check_and_attach_condition(const rmw_subscriptions_t *const subscrip
 
   if (subscriptions) {
     for (size_t i = 0; i < subscriptions->subscriber_count; ++i) {
-      // TODO
+      // TODO(bjsowa)
       //       auto sub_data = static_cast<rmw_zenoh_cpp::rmw_subscription_data_t *>(
       //           subscriptions->subscribers[i]);
       //       if (sub_data == nullptr) {
@@ -67,7 +67,7 @@ static bool check_and_attach_condition(const rmw_subscriptions_t *const subscrip
 
   if (services) {
     for (size_t i = 0; i < services->service_count; ++i) {
-      // TODO
+      // TODO(bjsowa)
       //       auto serv_data = static_cast<rmw_zenoh_cpp::rmw_service_data_t *>(
       //           services->services[i]);
       //       if (serv_data == nullptr) {
@@ -82,7 +82,7 @@ static bool check_and_attach_condition(const rmw_subscriptions_t *const subscrip
 
   if (clients) {
     for (size_t i = 0; i < clients->client_count; ++i) {
-      // TODO
+      // TODO(bjsowa)
       //       rmw_zenoh_cpp::rmw_client_data_t *client_data =
       //           static_cast<rmw_zenoh_cpp::rmw_client_data_t *>(clients->clients[i]);
       //       if (client_data == nullptr) {
@@ -99,7 +99,7 @@ static bool check_and_attach_condition(const rmw_subscriptions_t *const subscrip
 }
 
 static size_t rmw_time_to_us(const rmw_time_t *time) {
-  // TODO: handle overflows?
+  // TODO(bjsowa): handle overflows?
   return time->sec * 1000000 + time->nsec / 1000;
 }
 
@@ -195,7 +195,7 @@ rmw_ret_t rmw_wait(rmw_subscriptions_t *subscriptions, rmw_guard_conditions_t *g
   if (events) {
     for (size_t i = 0; i < events->event_count; ++i) {
       rmw_event_t *event = events->events[i];
-      // TODO
+      // TODO(bjsowa)
       //       auto event_data =
       //           static_cast<rmw_zenoh_cpp::EventsManager *>(event->data);
       //       if (event_data == nullptr) {
@@ -220,7 +220,7 @@ rmw_ret_t rmw_wait(rmw_subscriptions_t *subscriptions, rmw_guard_conditions_t *g
 
   if (subscriptions) {
     for (size_t i = 0; i < subscriptions->subscriber_count; ++i) {
-      // TODO
+      // TODO(bjsowa)
       //       auto sub_data = static_cast<rmw_zenoh_cpp::rmw_subscription_data_t *>(
       //           subscriptions->subscribers[i]);
       //       if (sub_data == nullptr) {
@@ -238,7 +238,7 @@ rmw_ret_t rmw_wait(rmw_subscriptions_t *subscriptions, rmw_guard_conditions_t *g
 
   if (services) {
     for (size_t i = 0; i < services->service_count; ++i) {
-      // TODO
+      // TODO(bjsowa)
       //       auto serv_data = static_cast<rmw_zenoh_cpp::rmw_service_data_t *>(
       //           services->services[i]);
       //       if (serv_data == nullptr) {
@@ -256,7 +256,7 @@ rmw_ret_t rmw_wait(rmw_subscriptions_t *subscriptions, rmw_guard_conditions_t *g
 
   if (clients) {
     for (size_t i = 0; i < clients->client_count; ++i) {
-      // TODO
+      // TODO(bjsowa)
       //       rmw_zenoh_cpp::rmw_client_data_t *client_data =
       //           static_cast<rmw_zenoh_cpp::rmw_client_data_t *>(clients->clients[i]);
       //       if (client_data == nullptr) {

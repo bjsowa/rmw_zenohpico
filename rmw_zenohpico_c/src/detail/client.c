@@ -92,7 +92,7 @@ void rmw_zp_client_decrement_queries_in_flight(rmw_zp_client_t* client, bool* qu
 void rmw_zp_client_data_handler(const z_loaned_reply_t* reply, void* data) {
   rmw_zp_client_t* client_data = data;
   if (client_data == NULL) {
-    // TODO: report error
+    // TODO(bjsowa): report error
     return;
   }
 
@@ -125,7 +125,7 @@ void rmw_zp_client_data_handler(const z_loaned_reply_t* reply, void* data) {
 void rmw_zp_client_data_dropper(void* data) {
   rmw_zp_client_t* client_data = data;
   if (client_data == NULL) {
-    // TODO: report error
+    // TODO(bjsowa): report error
     return;
   }
 
@@ -148,7 +148,7 @@ rmw_ret_t rmw_zp_client_add_new_reply(rmw_zp_client_t* client, const z_loaned_by
   z_mutex_lock(z_loan_mut(client->reply_queue_mutex));
 
   if (client->reply_queue.size >= client->adapted_qos_profile.depth) {
-    // TODO: Log warning if reply is discarded due to hitting the queue depth
+    // TODO(bjsowa): Log warning if reply is discarded due to hitting the queue depth
 
     // Adapted QoS has depth guaranteed to be >= 1
     if (rmw_zp_message_queue_pop_front(&client->reply_queue, NULL) != RMW_RET_OK) {

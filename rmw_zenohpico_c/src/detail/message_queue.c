@@ -75,7 +75,7 @@ rmw_ret_t rmw_zp_message_queue_push_back(rmw_zp_message_queue_t *message_queue,
     return RMW_RET_ERROR;
   }
 
-  // TODO: avoid dynamic allocation
+  // TODO(bjsowa): avoid dynamic allocation
   if (z_bytes_deserialize_into_slice(payload, &back_message->payload) < 0) {
     RMW_SET_ERROR_MSG("Failed to deserialize payload into slice");
     return RMW_RET_ERROR;
