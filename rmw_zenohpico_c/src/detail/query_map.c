@@ -8,13 +8,13 @@ static uint32_t get_query_id_hash(const int64_t sequence_number, const uint8_t* 
 
   uint32_t hash = fnv_offset_basis;
 
-  const uint8_t* const seq_ptr = &sequence_number;
-  for (int i = 0; i < sizeof(sequence_number); i++) {
+  const uint8_t* const seq_ptr = (uint8_t*)&sequence_number;
+  for (size_t i = 0; i < sizeof(sequence_number); i++) {
     hash ^= (uint32_t)seq_ptr[i];
     hash *= fnv_prime;
   }
 
-  for (int i = 0; i < RMW_GID_STORAGE_SIZE; i++) {
+  for (size_t i = 0; i < RMW_GID_STORAGE_SIZE; i++) {
     hash ^= (uint32_t)writer_guid[i];
     hash *= fnv_prime;
   }
@@ -23,7 +23,7 @@ static uint32_t get_query_id_hash(const int64_t sequence_number, const uint8_t* 
 }
 
 static int get_index(rmw_zp_query_map_t* query_map, uint32_t key) {
-  for (int i = 0; i < query_map->capacity; i++) {
+  for (size_t i = 0; i < query_map->capacity; i++) {
     if (query_map->keys[i] == key) {
       return i;
     }
@@ -80,7 +80,7 @@ rmw_ret_t rmw_zp_query_map_insert(rmw_zp_query_map_t* query_map, const z_loaned_
     return RMW_RET_ERROR;
   }
 
-  for (int i = 0; i < query_map->capacity; i++) {
+  for (size_t i = 0; i < query_map->capacity; i++) {
     if (query_map->keys[i] == 0) {
       query_map->keys[i] = hash;
       query_map->queries[i] = query;
