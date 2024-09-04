@@ -24,7 +24,7 @@ rmw_wait_set_t *rmw_create_wait_set(rmw_context_t *context, size_t max_condition
 
   rmw_zp_wait_set_t *wait_set_data =
       allocator->zero_allocate(1, sizeof(rmw_zp_wait_set_t), allocator->state);
-  RMW_CHECK_FOR_NULL_WITH_MSG(wait_set->data, "failed to allocate wait set data",
+  RMW_CHECK_FOR_NULL_WITH_MSG(wait_set_data, "failed to allocate wait set data",
                               goto fail_allocate_wait_set_data);
 
   if (rmw_zp_wait_set_init(wait_set_data) != RMW_RET_OK) {
