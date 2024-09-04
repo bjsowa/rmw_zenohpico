@@ -3,6 +3,7 @@
 #include "detail/rmw_data_types.h"
 #include "detail/ros_topic_name_to_zenoh_key.h"
 #include "detail/service.h"
+#include "detail/time.h"
 #include "rcutils/strdup.h"
 #include "rmw/check_type_identifiers_match.h"
 #include "rmw/rmw.h"
@@ -246,5 +247,76 @@ rmw_ret_t rmw_take_request(const rmw_service_t* service, rmw_service_info_t* req
 
 rmw_ret_t rmw_send_response(const rmw_service_t* service, rmw_request_id_t* request_header,
                             void* ros_response) {
-  return RMW_RET_UNSUPPORTED;
+  RMW_CHECK_ARGUMENT_FOR_NULL(service, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_ARGUMENT_FOR_NULL(service->data, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_ARGUMENT_FOR_NULL(request_header, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_ARGUMENT_FOR_NULL(ros_response, RMW_RET_INVALID_ARGUMENT);
+
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(service, service->implementation_identifier, rmw_zp_identifier,
+                                   return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+
+  RMW_CHECK_FOR_NULL_WITH_MSG(service->data, "Unable to retrieve service_data from service",
+                              RMW_RET_INVALID_ARGUMENT);
+
+  rmw_zp_service_t* service_data = service->data;
+
+  const z_loaned_query_t* query;
+  if (rmw_zp_service_take_from_query_map(service_data, request_header, &query) != RMW_RET_OK) {
+    return RMW_RET_ERROR;
+  }
+
+  rcutils_allocator_t* allocator = &service_data->context->options.allocator;
+
+  // Serialize response
+  size_t serialized_size = rmw_zp_service_type_support_get_response_serialized_size(
+      service_data->type_support, ros_response);
+
+  uint8_t* response_bytes = allocator->allocate(serialized_size, allocator->state);
+  RMW_CHECK_FOR_NULL_WITH_MSG(response_bytes, "failed allocate response message bytes",
+                              return RMW_RET_BAD_ALLOC);
+
+  if (rmw_zp_service_type_support_serialize_response(service_data->type_support, ros_response,
+                                                     response_bytes,
+                                                     serialized_size) != RMW_RET_OK) {
+    goto fail_serialize_ros_response;
+  }
+
+  // Create attachment
+  rmw_zp_attachment_data_t attachment_data = {.sequence_number = request_header->sequence_number};
+  memcpy(attachment_data.source_gid, request_header->writer_guid, RMW_GID_STORAGE_SIZE);
+
+  if (rmw_zp_get_current_timestamp(&attachment_data.source_timestamp) != RMW_RET_OK) {
+    goto fail_get_current_timestamp;
+  }
+  
+  z_owned_bytes_t attachment;
+  if (rmw_zp_attachment_data_serialize_to_zbytes(&attachment_data, &attachment) != RMW_RET_OK) {
+    goto fail_serialize_attachment;
+  }
+
+  // Create query options
+  z_query_reply_options_t opts;
+  z_query_reply_options_default(&opts);
+  opts.attachment = z_move(attachment);
+
+  // Send query reply
+  z_owned_bytes_t payload;
+  z_bytes_from_static_buf(&payload, response_bytes, serialized_size);
+
+  if (z_query_reply(query, z_loan(service_data->keyexpr), z_move(payload), &opts) < 0) {
+    RMW_SET_ERROR_MSG("Failed to reply to zenoh query");
+    goto fail_query_reply;
+  }
+
+  allocator->deallocate(response_bytes, allocator->state);
+
+  return RMW_RET_OK;
+
+fail_query_reply:
+  z_drop(opts.attachment);
+fail_serialize_attachment:
+fail_get_current_timestamp:
+fail_serialize_ros_response:
+  allocator->deallocate(response_bytes, allocator->state);
+  return RMW_RET_ERROR;
 }
