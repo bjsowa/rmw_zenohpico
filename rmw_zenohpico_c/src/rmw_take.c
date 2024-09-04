@@ -31,13 +31,11 @@ static rmw_ret_t take_one(rmw_zp_subscription_t* sub_data, void* ros_message, bo
     message_info->reception_sequence_number = 0;
     message_info->publisher_gid.implementation_identifier = rmw_zp_identifier;
     message_info->from_intra_process = false;
+    message_info->received_timestamp = msg_data.received_timestamp;
     message_info->source_timestamp = msg_data.attachment_data.source_timestamp;
     message_info->publication_sequence_number = msg_data.attachment_data.sequence_number;
     memcpy(message_info->publisher_gid.data, msg_data.attachment_data.source_gid,
            RMW_GID_STORAGE_SIZE);
-
-    // TODO: Fill the rest of message info
-    // message_info->received_timestamp = msg_data->recv_timestamp;
   }
 
   *taken = true;
@@ -71,13 +69,11 @@ static rmw_ret_t take_one_serialized(rmw_zp_subscription_t* sub_data,
     message_info->reception_sequence_number = 0;
     message_info->publisher_gid.implementation_identifier = rmw_zp_identifier;
     message_info->from_intra_process = false;
+    message_info->received_timestamp = msg_data.received_timestamp;
     message_info->source_timestamp = msg_data.attachment_data.source_timestamp;
     message_info->publication_sequence_number = msg_data.attachment_data.sequence_number;
     memcpy(message_info->publisher_gid.data, msg_data.attachment_data.source_gid,
            RMW_GID_STORAGE_SIZE);
-
-    // TODO: Fill the rest of message info
-    // message_info->received_timestamp = msg_data->recv_timestamp;
   }
 
   return RMW_RET_OK;

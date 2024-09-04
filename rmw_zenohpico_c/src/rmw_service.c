@@ -232,13 +232,11 @@ rmw_ret_t rmw_take_request(const rmw_service_t* service, rmw_service_info_t* req
 
   z_drop(z_move(query_data.payload));
 
+  request_header->received_timestamp = query_data.received_timestamp;
   request_header->request_id.sequence_number = query_data.attachment_data.sequence_number;
   request_header->source_timestamp = query_data.attachment_data.source_timestamp;
   memcpy(request_header->request_id.writer_guid, query_data.attachment_data.source_gid,
          RMW_GID_STORAGE_SIZE);
-
-  // TODO(bjsowa): Fill missing service info
-  // request_header->received_timestamp = ?
 
   *taken = true;
 

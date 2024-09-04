@@ -1,5 +1,6 @@
 #include "./message_queue.h"
 
+#include "./time.h"
 #include "rmw/error_handling.h"
 
 rmw_ret_t rmw_zp_message_queue_init(rmw_zp_message_queue_t *message_queue, size_t capacity,
@@ -64,6 +65,10 @@ rmw_ret_t rmw_zp_message_queue_push_back(rmw_zp_message_queue_t *message_queue,
   }
 
   rmw_zp_message_t *back_message = &message_queue->messages[message_queue->idx_front];
+
+  if (rmw_zp_get_current_timestamp(&back_message->received_timestamp) != RMW_RET_OK) {
+    return RMW_RET_ERROR;
+  }
 
   if (rmw_zp_attachment_data_deserialize_from_zbytes(attachment, &back_message->attachment_data) !=
       RMW_RET_OK) {

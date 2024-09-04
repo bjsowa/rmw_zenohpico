@@ -7,6 +7,7 @@
 #include "zenoh-pico.h"
 
 typedef struct {
+  int64_t received_timestamp;
   rmw_zp_attachment_data_t attachment_data;
   z_owned_slice_t payload;
 } rmw_zp_message_t;
