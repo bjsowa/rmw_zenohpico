@@ -339,3 +339,12 @@ rmw_ret_t rmw_get_gid_for_client(const rmw_client_t* client, rmw_gid_t* gid) {
 
   return RMW_RET_OK;
 }
+
+rmw_ret_t rmw_client_set_on_new_response_callback(rmw_client_t* client,
+                                                  rmw_event_callback_t callback,
+                                                  const void* user_data) {
+  RCUTILS_UNUSED(client);
+  RCUTILS_UNUSED(callback);
+  RCUTILS_UNUSED(user_data);
+  return RMW_RET_UNSUPPORTED;
+}

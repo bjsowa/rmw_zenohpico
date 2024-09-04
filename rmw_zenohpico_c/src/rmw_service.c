@@ -286,7 +286,7 @@ rmw_ret_t rmw_send_response(const rmw_service_t* service, rmw_request_id_t* requ
   if (rmw_zp_get_current_timestamp(&attachment_data.source_timestamp) != RMW_RET_OK) {
     goto fail_get_current_timestamp;
   }
-  
+
   z_owned_bytes_t attachment;
   if (rmw_zp_attachment_data_serialize_to_zbytes(&attachment_data, &attachment) != RMW_RET_OK) {
     goto fail_serialize_attachment;
@@ -317,4 +317,13 @@ fail_get_current_timestamp:
 fail_serialize_ros_response:
   allocator->deallocate(response_bytes, allocator->state);
   return RMW_RET_ERROR;
+}
+
+rmw_ret_t rmw_service_set_on_new_request_callback(rmw_service_t* service,
+                                                  rmw_event_callback_t callback,
+                                                  const void* user_data) {
+  RCUTILS_UNUSED(service);
+  RCUTILS_UNUSED(callback);
+  RCUTILS_UNUSED(user_data);
+  return RMW_RET_UNSUPPORTED;
 }

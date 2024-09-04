@@ -30,7 +30,7 @@ set(SRCS
   src/detail/wait_set.c
   src/rmw_client.c
   src/rmw_dynamic_message_type_support.c
-  src/rmw_event_callbacks.c
+  src/rmw_event.c
   src/rmw_features.c
   src/rmw_graph.c
   src/rmw_guard_condition.c

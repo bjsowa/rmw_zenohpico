@@ -230,3 +230,12 @@ rmw_ret_t rmw_subscription_get_content_filter(const rmw_subscription_t* subscrip
   RCUTILS_UNUSED(options);
   return RMW_RET_UNSUPPORTED;
 }
+
+rmw_ret_t rmw_subscription_set_on_new_message_callback(rmw_subscription_t* subscription,
+                                                       rmw_event_callback_t callback,
+                                                       const void* user_data) {
+  RCUTILS_UNUSED(subscription);
+  RCUTILS_UNUSED(callback);
+  RCUTILS_UNUSED(user_data);
+  return RMW_RET_UNSUPPORTED;
+}
