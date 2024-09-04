@@ -32,6 +32,7 @@ set(SRCS
   src/rmw_dynamic_message_type_support.c
   src/rmw_event_callbacks.c
   src/rmw_features.c
+  src/rmw_graph.c
   src/rmw_guard_condition.c
   src/rmw_identifiers.c
   src/rmw_init_options.c
