@@ -25,6 +25,7 @@ set(SRCS
   src/detail/ros_topic_name_to_zenoh_key.c
   src/detail/service.c
   src/detail/subscription.c
+  src/detail/time.c
   src/detail/type_support.c
   src/detail/wait_set.c
   src/rmw_client.c
