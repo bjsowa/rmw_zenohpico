@@ -1,6 +1,7 @@
 #include "detail/client.h"
 #include "detail/guard_condition.h"
 #include "detail/identifiers.h"
+#include "detail/service.h"
 #include "detail/subscription.h"
 #include "detail/wait_set.h"
 #include "rcutils/macros.h"
@@ -123,31 +124,25 @@ static bool check_and_attach_condition(const rmw_subscriptions_t *const subscrip
 
   if (services) {
     for (size_t i = 0; i < services->service_count; ++i) {
-      // TODO(bjsowa)
-      //       auto serv_data = static_cast<rmw_zenoh_cpp::rmw_service_data_t *>(
-      //           services->services[i]);
-      //       if (serv_data == nullptr) {
-      //         continue;
-      //       }
-      //       if (serv_data->queue_has_data_and_attach_condition_if_not(
-      //               wait_set_data)) {
-      //         return true;
-      //       }
+      rmw_zp_service_t *serv_data = services->services[i];
+      if (serv_data == NULL) {
+        continue;
+      }
+      if (rmw_zp_service_queue_has_data_and_attach_condition_if_not(serv_data, wait_set_data)) {
+        return true;
+      }
     }
   }
 
   if (clients) {
     for (size_t i = 0; i < clients->client_count; ++i) {
-      // TODO(bjsowa)
-      //       rmw_zenoh_cpp::rmw_client_data_t *client_data =
-      //           static_cast<rmw_zenoh_cpp::rmw_client_data_t *>(clients->clients[i]);
-      //       if (client_data == nullptr) {
-      //         continue;
-      //       }
-      //       if (client_data->queue_has_data_and_attach_condition_if_not(
-      //               wait_set_data)) {
-      //         return true;
-      //       }
+      rmw_zp_client_t *client_data = clients->clients[i];
+      if (client_data == NULL) {
+        continue;
+      }
+      if (rmw_zp_client_queue_has_data_and_attach_condition_if_not(client_data, wait_set_data)) {
+        return true;
+      }
     }
   }
 
@@ -159,8 +154,6 @@ static size_t rmw_time_to_us(const rmw_time_t *time) {
   return time->sec * 1000000 + time->nsec / 1000;
 }
 
-//==============================================================================
-/// Waits on sets of different entities and returns when one is ready.
 rmw_ret_t rmw_wait(rmw_subscriptions_t *subscriptions, rmw_guard_conditions_t *guard_conditions,
                    rmw_services_t *services, rmw_clients_t *clients, rmw_events_t *events,
                    rmw_wait_set_t *wait_set, const rmw_time_t *wait_timeout) {
@@ -292,37 +285,32 @@ rmw_ret_t rmw_wait(rmw_subscriptions_t *subscriptions, rmw_guard_conditions_t *g
 
   if (services) {
     for (size_t i = 0; i < services->service_count; ++i) {
-      // TODO(bjsowa)
-      //       auto serv_data = static_cast<rmw_zenoh_cpp::rmw_service_data_t *>(
-      //           services->services[i]);
-      //       if (serv_data == nullptr) {
-      //         continue;
-      //       }
+      rmw_zp_service_t *serv_data = services->services[i];
+      if (serv_data == NULL) {
+        continue;
+      }
 
-      //       if (serv_data->detach_condition_and_queue_is_empty()) {
-      //         // Setting to nullptr lets rcl know that this service is not ready
-      //         services->services[i] = nullptr;
-      //       } else {
-      //         wait_result = true;
-      //       }
+      if (rmw_zp_service_detach_condition_and_queue_is_empty(serv_data)) {
+        // Setting to nullptr lets rcl know that this service is not ready
+        services->services[i] = NULL;
+      } else {
+        wait_result = true;
+      }
     }
   }
 
   if (clients) {
     for (size_t i = 0; i < clients->client_count; ++i) {
-      // TODO(bjsowa)
-      //       rmw_zenoh_cpp::rmw_client_data_t *client_data =
-      //           static_cast<rmw_zenoh_cpp::rmw_client_data_t *>(clients->clients[i]);
-      //       if (client_data == nullptr) {
-      //         continue;
-      //       }
+      rmw_zp_client_t *client_data = clients->clients[i];
+      if (client_data == NULL) {
+        continue;
+      }
 
-      //       if (client_data->detach_condition_and_queue_is_empty()) {
-      //         // Setting to nullptr lets rcl know that this client is not ready
-      //         clients->clients[i] = nullptr;
-      //       } else {
-      //         wait_result = true;
-      //       }
+      if (rmw_zp_client_detach_condition_and_queue_is_empty(client_data)) {
+        clients->clients[i] = NULL;
+      } else {
+        wait_result = true;
+      }
     }
   }
 

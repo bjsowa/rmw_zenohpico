@@ -19,6 +19,11 @@ rmw_ret_t rmw_zp_client_init(rmw_zp_client_t* client, const rmw_qos_profile_t* q
     return RMW_RET_ERROR;
   }
 
+  if (z_mutex_init(&client->condition_mutex) < 0) {
+    RMW_SET_ERROR_MSG("Failed to initialize zenohpico mutex");
+    goto fail_init_condition_mutex;
+  }
+
   if (rmw_zp_message_queue_init(&client->reply_queue, client->adapted_qos_profile.depth,
                                 allocator) != RMW_RET_OK) {
     goto fail_init_reply_queue;
@@ -41,6 +46,8 @@ fail_init_in_flight_mutex:
 fail_init_reply_queue_mutex:
   rmw_zp_message_queue_fini(&client->reply_queue, allocator);
 fail_init_reply_queue:
+  z_drop(z_move(client->condition_mutex));
+fail_init_condition_mutex:
   z_drop(z_move(client->sequence_number_mutex));
   return RMW_RET_ERROR;
 }
@@ -59,6 +66,11 @@ rmw_ret_t rmw_zp_client_fini(rmw_zp_client_t* client, rcutils_allocator_t* alloc
   }
 
   if (rmw_zp_message_queue_fini(&client->reply_queue, allocator) != RMW_RET_OK) {
+    ret = RMW_RET_ERROR;
+  }
+
+  if (z_drop(z_move(client->condition_mutex)) < 0) {
+    RMW_SET_ERROR_MSG("Failed to drop zenohpico mutex");
     ret = RMW_RET_ERROR;
   }
 
@@ -165,6 +177,8 @@ rmw_ret_t rmw_zp_client_add_new_reply(rmw_zp_client_t* client, const z_loaned_by
 
   z_mutex_unlock(z_loan_mut(client->reply_queue_mutex));
 
+  rmw_zp_client_notify(client);
+
   return RMW_RET_OK;
 }
 
@@ -185,4 +199,43 @@ rmw_ret_t rmw_zp_client_pop_next_reply(rmw_zp_client_t* client, rmw_zp_message_t
   z_mutex_unlock(z_loan_mut(client->reply_queue_mutex));
 
   return RMW_RET_OK;
+}
+
+bool rmw_zp_client_queue_has_data_and_attach_condition_if_not(rmw_zp_client_t* client,
+                                                              rmw_zp_wait_set_t* wait_set) {
+  z_mutex_lock(z_loan_mut(client->condition_mutex));
+
+  if (client->reply_queue.size > 0) {
+    z_mutex_unlock(z_loan_mut(client->condition_mutex));
+    return true;
+  }
+
+  client->wait_set_data = wait_set;
+
+  z_mutex_unlock(z_loan_mut(client->condition_mutex));
+
+  return false;
+}
+
+void rmw_zp_client_notify(rmw_zp_client_t* client) {
+  z_mutex_lock(z_loan_mut(client->condition_mutex));
+
+  if (client->wait_set_data != NULL) {
+    z_mutex_lock(z_loan_mut(client->wait_set_data->condition_mutex));
+    client->wait_set_data->triggered = true;
+    z_condvar_signal(z_loan_mut(client->wait_set_data->condition_variable));
+    z_mutex_unlock(z_loan_mut(client->wait_set_data->condition_mutex));
+  }
+
+  z_mutex_unlock(z_loan_mut(client->condition_mutex));
+}
+
+bool rmw_zp_client_detach_condition_and_queue_is_empty(rmw_zp_client_t* client) {
+  z_mutex_lock(z_loan_mut(client->condition_mutex));
+
+  client->wait_set_data = NULL;
+
+  z_mutex_unlock(z_loan_mut(client->condition_mutex));
+
+  return client->reply_queue.size == 0;
 }

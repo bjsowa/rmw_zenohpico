@@ -28,6 +28,9 @@ typedef struct {
   z_owned_mutex_t sequence_number_mutex;
   size_t sequence_number;
 
+  rmw_zp_wait_set_t* wait_set_data;
+  z_owned_mutex_t condition_mutex;
+
   rmw_zp_message_queue_t reply_queue;
   z_owned_mutex_t reply_queue_mutex;
 
@@ -70,5 +73,12 @@ rmw_ret_t rmw_zp_client_add_new_reply(rmw_zp_client_t* client, const z_loaned_by
                                       const z_loaned_bytes_t* payload);
 
 rmw_ret_t rmw_zp_client_pop_next_reply(rmw_zp_client_t* client, rmw_zp_message_t* reply_data);
+
+bool rmw_zp_client_queue_has_data_and_attach_condition_if_not(rmw_zp_client_t* client,
+                                                              rmw_zp_wait_set_t* wait_set);
+
+void rmw_zp_client_notify(rmw_zp_client_t* client);
+
+bool rmw_zp_client_detach_condition_and_queue_is_empty(rmw_zp_client_t* client);
 
 #endif

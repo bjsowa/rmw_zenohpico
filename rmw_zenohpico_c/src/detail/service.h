@@ -4,6 +4,7 @@
 #include "./message_queue.h"
 #include "./query_map.h"
 #include "./type_support.h"
+#include "./wait_set.h"
 #include "rmw/rmw.h"
 #include "zenoh-pico.h"
 
@@ -25,6 +26,9 @@ typedef struct {
   rmw_zp_message_queue_t message_queue;
   rmw_zp_query_map_t query_map;
   z_owned_mutex_t message_queue_mutex;
+
+  rmw_zp_wait_set_t* wait_set_data;
+  z_owned_mutex_t condition_mutex;
 } rmw_zp_service_t;
 
 rmw_ret_t rmw_zp_service_init(rmw_zp_service_t* service, const rmw_qos_profile_t* qos_profile,
@@ -44,5 +48,12 @@ rmw_ret_t rmw_zp_service_pop_next_query(rmw_zp_service_t* service, rmw_zp_messag
 rmw_ret_t rmw_zp_service_take_from_query_map(rmw_zp_service_t* service,
                                              const rmw_request_id_t* request_header,
                                              const z_loaned_query_t** query);
+
+bool rmw_zp_service_queue_has_data_and_attach_condition_if_not(rmw_zp_service_t* service,
+                                                               rmw_zp_wait_set_t* wait_set);
+
+void rmw_zp_service_notify(rmw_zp_service_t* service);
+
+bool rmw_zp_service_detach_condition_and_queue_is_empty(rmw_zp_service_t* service);
 
 #endif

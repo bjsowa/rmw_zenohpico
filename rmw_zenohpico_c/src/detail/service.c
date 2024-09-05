@@ -27,8 +27,14 @@ rmw_ret_t rmw_zp_service_init(rmw_zp_service_t* service, const rmw_qos_profile_t
     goto fail_init_message_queue_mutex;
   }
 
+  if (z_mutex_init(&service->condition_mutex) < 0) {
+    RMW_SET_ERROR_MSG("Failed to initialize zenohpico mutex");
+    goto fail_init_condition_mutex;
+  }
+
   return RMW_RET_OK;
 
+fail_init_condition_mutex:
   z_drop(z_move(service->message_queue_mutex));
 fail_init_message_queue_mutex:
   rmw_zp_query_map_fini(&service->query_map, allocator);
@@ -39,6 +45,11 @@ fail_init_query_map:
 
 rmw_ret_t rmw_zp_service_fini(rmw_zp_service_t* service, rcutils_allocator_t* allocator) {
   rmw_ret_t ret = RMW_RET_OK;
+
+  if (z_drop(z_move(service->condition_mutex)) < 0) {
+    RMW_SET_ERROR_MSG("Failed to drop zenohpico mutex");
+    ret = RMW_RET_ERROR;
+  }
 
   if (z_drop(z_move(service->message_queue_mutex)) < 0) {
     RMW_SET_ERROR_MSG("Failed to drop zenohpico mutex");
@@ -108,6 +119,8 @@ rmw_ret_t rmw_zp_service_add_new_query(rmw_zp_service_t* service,
 
   z_mutex_unlock(z_loan_mut(service->message_queue_mutex));
 
+  rmw_zp_service_notify(service);
+
   return RMW_RET_OK;
 }
 
@@ -144,4 +157,43 @@ rmw_ret_t rmw_zp_service_take_from_query_map(rmw_zp_service_t* service,
   z_mutex_unlock(z_loan_mut(service->message_queue_mutex));
 
   return RMW_RET_OK;
+}
+
+bool rmw_zp_service_queue_has_data_and_attach_condition_if_not(rmw_zp_service_t* service,
+                                                               rmw_zp_wait_set_t* wait_set) {
+  z_mutex_lock(z_loan_mut(service->condition_mutex));
+
+  if (service->message_queue.size > 0) {
+    z_mutex_unlock(z_loan_mut(service->condition_mutex));
+    return true;
+  }
+
+  service->wait_set_data = wait_set;
+
+  z_mutex_unlock(z_loan_mut(service->condition_mutex));
+
+  return false;
+}
+
+void rmw_zp_service_notify(rmw_zp_service_t* service) {
+  z_mutex_lock(z_loan_mut(service->condition_mutex));
+
+  if (service->wait_set_data != NULL) {
+    z_mutex_lock(z_loan_mut(service->wait_set_data->condition_mutex));
+    service->wait_set_data->triggered = true;
+    z_condvar_signal(z_loan_mut(service->wait_set_data->condition_variable));
+    z_mutex_unlock(z_loan_mut(service->wait_set_data->condition_mutex));
+  }
+
+  z_mutex_unlock(z_loan_mut(service->condition_mutex));
+}
+
+bool rmw_zp_service_detach_condition_and_queue_is_empty(rmw_zp_service_t* service) {
+  z_mutex_lock(z_loan_mut(service->condition_mutex));
+
+  service->wait_set_data = NULL;
+
+  z_mutex_unlock(z_loan_mut(service->condition_mutex));
+
+  return service->message_queue.size == 0;
 }
