@@ -43,7 +43,6 @@ set(SRCS
   src/rmw_service.c
   src/rmw_subscription.c
   src/rmw_wait_set.c
-  src/rmw_wait.c
 )
 
 add_library(${PROJECT_NAME}
