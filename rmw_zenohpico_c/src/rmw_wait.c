@@ -1,5 +1,6 @@
 #include "detail/guard_condition.h"
 #include "detail/identifiers.h"
+#include "detail/subscription.h"
 #include "detail/wait_set.h"
 #include "rmw/check_type_identifiers_match.h"
 #include "rmw/error_handling.h"
@@ -53,15 +54,13 @@ static bool check_and_attach_condition(const rmw_subscriptions_t *const subscrip
 
   if (subscriptions) {
     for (size_t i = 0; i < subscriptions->subscriber_count; ++i) {
-      // TODO(bjsowa)
-      //       auto sub_data = static_cast<rmw_zenoh_cpp::rmw_subscription_data_t *>(
-      //           subscriptions->subscribers[i]);
-      //       if (sub_data == nullptr) {
-      //         continue;
-      //       }
-      //       if (sub_data->queue_has_data_and_attach_condition_if_not(wait_set_data)) {
-      //         return true;
-      //       }
+      rmw_zp_subscription_t *sub_data = subscriptions->subscribers[i];
+      if (sub_data == NULL) {
+        continue;
+      }
+      if (rmw_zp_subscription_queue_has_data_and_attach_condition_if_not(sub_data, wait_set_data)) {
+        return true;
+      }
     }
   }
 
@@ -220,19 +219,17 @@ rmw_ret_t rmw_wait(rmw_subscriptions_t *subscriptions, rmw_guard_conditions_t *g
 
   if (subscriptions) {
     for (size_t i = 0; i < subscriptions->subscriber_count; ++i) {
-      // TODO(bjsowa)
-      //       auto sub_data = static_cast<rmw_zenoh_cpp::rmw_subscription_data_t *>(
-      //           subscriptions->subscribers[i]);
-      //       if (sub_data == nullptr) {
-      //         continue;
-      //       }
+      rmw_zp_subscription_t *sub_data = subscriptions->subscribers[i];
+      if (sub_data == NULL) {
+        continue;
+      }
 
-      //       if (sub_data->detach_condition_and_queue_is_empty()) {
-      //         // Setting to nullptr lets rcl know that this subscription is not ready
-      //         subscriptions->subscribers[i] = nullptr;
-      //       } else {
-      //         wait_result = true;
-      //       }
+      if (rmw_zp_subscription_detach_condition_and_queue_is_empty(sub_data)) {
+        // Setting to NULL lets rcl know that this subscription is not ready
+        subscriptions->subscribers[i] = NULL;
+      } else {
+        wait_result = true;
+      }
     }
   }
 

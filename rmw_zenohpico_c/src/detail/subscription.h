@@ -6,6 +6,7 @@
 #include "./attachment_helpers.h"
 #include "./message_queue.h"
 #include "./type_support.h"
+#include "./wait_set.h"
 #include "rmw/ret_types.h"
 #include "rmw/types.h"
 #include "zenoh-pico.h"
@@ -25,6 +26,9 @@ typedef struct {
 
   rmw_zp_message_queue_t message_queue;
   z_owned_mutex_t message_queue_mutex;
+
+  rmw_zp_wait_set_t* wait_set_data;
+  z_owned_mutex_t condition_mutex;
 } rmw_zp_subscription_t;
 
 rmw_ret_t rmw_zp_subscription_init(rmw_zp_subscription_t* subscription,
@@ -42,5 +46,12 @@ rmw_ret_t rmw_zp_subscription_add_new_message(rmw_zp_subscription_t* subscriptio
 
 rmw_ret_t rmw_zp_subscription_pop_next_message(rmw_zp_subscription_t* subscription,
                                                rmw_zp_message_t* msg_data);
+
+bool rmw_zp_subscription_queue_has_data_and_attach_condition_if_not(
+    rmw_zp_subscription_t* subscription, rmw_zp_wait_set_t* wait_set);
+
+void rmw_zp_subscription_notify(rmw_zp_subscription_t* subscription);
+
+bool rmw_zp_subscription_detach_condition_and_queue_is_empty(rmw_zp_subscription_t* subscription);
 
 #endif
