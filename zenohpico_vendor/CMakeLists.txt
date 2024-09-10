@@ -8,7 +8,7 @@ find_package(zenohpico QUIET)
 
 ament_vendor(zenohpico_vendor
   VCS_URL "https://github.com/eclipse-zenoh/zenoh-pico.git"
-  VCS_VERSION "e837b672f3412f361873ba4b780a2d01360465f6"
+  VCS_VERSION "9e926b5b517336d2a78d54b9515f420241fc7dc1"
   SATISFIED ${zenohpico_FOUND}
 )
 

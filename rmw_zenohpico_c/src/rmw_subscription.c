@@ -123,11 +123,6 @@ rmw_subscription_t* rmw_create_subscription(
   // TODO(bjsowa): support transient local qos via querying subscriber
   z_subscriber_options_t sub_options;
   z_subscriber_options_default(&sub_options);
-#ifdef Z_FEATURE_UNSTABLE_API
-  if (qos_profile->reliability == RMW_QOS_POLICY_RELIABILITY_RELIABLE) {
-    sub_options.reliability = Z_RELIABILITY_RELIABLE;
-  }
-#endif
 
   if (z_declare_subscriber(&sub_data->sub, z_loan(context_impl->session), z_loan(keyexpr),
                            z_move(callback), &sub_options)) {
