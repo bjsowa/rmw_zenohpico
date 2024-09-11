@@ -42,7 +42,7 @@ rmw_ret_t rmw_zp_query_map_init(rmw_zp_query_map_t* query_map, size_t capacity,
     return RMW_RET_ERROR;
   }
 
-  query_map->queries = allocator->allocate(capacity * sizeof(z_loaned_query_t*), allocator->state);
+  query_map->queries = allocator->allocate(capacity * sizeof(z_loaned_query_t), allocator->state);
 
   if (query_map->keys == NULL) {
     RMW_SET_ERROR_MSG("Failed to allocate query map queries");
@@ -83,7 +83,7 @@ rmw_ret_t rmw_zp_query_map_insert(rmw_zp_query_map_t* query_map, const z_loaned_
   for (size_t i = 0; i < query_map->capacity; i++) {
     if (query_map->keys[i] == 0) {
       query_map->keys[i] = hash;
-      query_map->queries[i] = query;
+      query_map->queries[i] = _z_query_rc_clone(query);
       return RMW_RET_OK;
     }
   }
@@ -93,7 +93,7 @@ rmw_ret_t rmw_zp_query_map_insert(rmw_zp_query_map_t* query_map, const z_loaned_
 }
 
 rmw_ret_t rmw_zp_query_map_extract(rmw_zp_query_map_t* query_map, int64_t sequence_number,
-                                   const uint8_t* writer_guid, const z_loaned_query_t** query) {
+                                   const uint8_t* writer_guid, z_loaned_query_t* query) {
   const uint32_t hash = get_query_id_hash(sequence_number, writer_guid);
 
   int key_index = get_index(query_map, hash);

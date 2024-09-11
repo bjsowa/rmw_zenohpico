@@ -258,7 +258,7 @@ rmw_ret_t rmw_send_response(const rmw_service_t* service, rmw_request_id_t* requ
 
   rmw_zp_service_t* service_data = service->data;
 
-  const z_loaned_query_t* query;
+  z_loaned_query_t query;
   if (rmw_zp_service_take_from_query_map(service_data, request_header, &query) != RMW_RET_OK) {
     return RMW_RET_ERROR;
   }
@@ -271,7 +271,7 @@ rmw_ret_t rmw_send_response(const rmw_service_t* service, rmw_request_id_t* requ
 
   uint8_t* response_bytes = allocator->allocate(serialized_size, allocator->state);
   RMW_CHECK_FOR_NULL_WITH_MSG(response_bytes, "failed allocate response message bytes",
-                              return RMW_RET_BAD_ALLOC);
+                              goto fail_allocate_response_bytes);
 
   if (rmw_zp_service_type_support_serialize_response(service_data->type_support, ros_response,
                                                      response_bytes,
@@ -301,12 +301,13 @@ rmw_ret_t rmw_send_response(const rmw_service_t* service, rmw_request_id_t* requ
   z_owned_bytes_t payload;
   z_bytes_from_static_buf(&payload, response_bytes, serialized_size);
 
-  if (z_query_reply(query, z_loan(service_data->keyexpr), z_move(payload), &opts) < 0) {
+  if (z_query_reply(&query, z_loan(service_data->keyexpr), z_move(payload), &opts) < 0) {
     RMW_SET_ERROR_MSG("Failed to reply to zenoh query");
     goto fail_query_reply;
   }
 
   allocator->deallocate(response_bytes, allocator->state);
+  _z_query_rc_drop(&query);
 
   return RMW_RET_OK;
 
@@ -316,6 +317,8 @@ fail_serialize_attachment:
 fail_get_current_timestamp:
 fail_serialize_ros_response:
   allocator->deallocate(response_bytes, allocator->state);
+fail_allocate_response_bytes:
+  _z_query_rc_drop(&query);
   return RMW_RET_ERROR;
 }
 

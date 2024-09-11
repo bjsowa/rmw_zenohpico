@@ -145,7 +145,7 @@ rmw_ret_t rmw_zp_service_pop_next_query(rmw_zp_service_t* service, rmw_zp_messag
 
 rmw_ret_t rmw_zp_service_take_from_query_map(rmw_zp_service_t* service,
                                              const rmw_request_id_t* request_header,
-                                             const z_loaned_query_t** query) {
+                                             z_loaned_query_t* query) {
   z_mutex_lock(z_loan_mut(service->message_queue_mutex));
 
   if (rmw_zp_query_map_extract(&service->query_map, request_header->sequence_number,

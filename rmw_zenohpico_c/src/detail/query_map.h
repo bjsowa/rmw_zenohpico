@@ -9,7 +9,7 @@
 
 typedef struct {
   uint32_t* keys;
-  const z_loaned_query_t** queries;
+  z_loaned_query_t* queries;
   size_t capacity;
 } rmw_zp_query_map_t;
 
@@ -22,6 +22,6 @@ rmw_ret_t rmw_zp_query_map_insert(rmw_zp_query_map_t* query_map, const z_loaned_
                                   int64_t sequence_number, const uint8_t* writer_guid);
 
 rmw_ret_t rmw_zp_query_map_extract(rmw_zp_query_map_t* query_map, int64_t sequence_number,
-                                   const uint8_t* writer_guid, const z_loaned_query_t** query);
+                                   const uint8_t* writer_guid, z_loaned_query_t* query);
 
 #endif
