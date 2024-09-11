@@ -47,7 +47,7 @@ rmw_ret_t rmw_init(const rmw_init_options_t* options, rmw_context_t* context) {
   context->impl->is_shutdown = false;
 
   // Initialize the zenoh session.
-  if (z_open(&context->impl->session, z_move(context->options.impl->config)) < 0) {
+  if (z_open(&context->impl->session, z_move(context->options.impl->config), NULL) < 0) {
     RMW_SET_ERROR_MSG("Error setting up zenoh session");
     ret = RMW_RET_ERROR;
     goto fail_session_open;
@@ -76,7 +76,7 @@ fail_start_lease_task:
 fail_start_read_task:
   RMW_UNUSED(rmw_destroy_guard_condition(context->impl->graph_guard_condition))
 fail_create_graph_guard_condition:
-  z_close(z_move(context->impl->session));
+  z_close(z_move(context->impl->session), NULL);
 fail_session_open:
   RMW_UNUSED(rmw_init_options_fini(&context->options))
 fail_init_options_copy:
@@ -108,7 +108,7 @@ rmw_ret_t rmw_shutdown(rmw_context_t* context) {
   }
 
   // Close the zenoh session
-  if (z_close(z_move(context->impl->session)) < 0) {
+  if (z_close(z_move(context->impl->session), NULL) < 0) {
     RMW_SET_ERROR_MSG("Error while closing zenoh session");
     ret = RMW_RET_ERROR;
   }
