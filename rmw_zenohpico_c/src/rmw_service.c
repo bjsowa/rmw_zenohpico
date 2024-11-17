@@ -105,7 +105,7 @@ rmw_service_t* rmw_create_service(const rmw_node_t* node,
   z_queryable_options_t qable_options;
   z_queryable_options_default(&qable_options);
   qable_options.complete = true;
-  if (z_declare_queryable(&service_data->qable, z_loan(context_impl->session),
+  if (z_declare_queryable(z_loan(context_impl->session), &service_data->qable,
                           z_loan(service_data->keyexpr), z_move(callback), &qable_options) < 0) {
     RMW_SET_ERROR_MSG("unable to create zenoh queryable");
     goto fail_create_zenoh_queryable;

@@ -39,7 +39,7 @@ rmw_ret_t rmw_init_options_init(rmw_init_options_t* init_options, rcutils_alloca
     goto fail_allocate_init_options_impl;
   });
 
-  z_config_new(&init_options->impl->config);
+  _z_config_init(&init_options->impl->config._val);
 
   if (zp_config_insert(z_loan_mut(init_options->impl->config), Z_CONFIG_MODE_KEY,
                        rmw_zp_default_mode) < 0 ||

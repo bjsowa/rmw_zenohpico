@@ -124,7 +124,7 @@ rmw_subscription_t* rmw_create_subscription(
   z_subscriber_options_t sub_options;
   z_subscriber_options_default(&sub_options);
 
-  if (z_declare_subscriber(&sub_data->sub, z_loan(context_impl->session), z_loan(keyexpr),
+  if (z_declare_subscriber(z_loan(context_impl->session), &sub_data->sub, z_loan(keyexpr),
                            z_move(callback), &sub_options)) {
     RMW_SET_ERROR_MSG("unable to create zenoh subscription");
     goto fail_create_zenoh_subscription;

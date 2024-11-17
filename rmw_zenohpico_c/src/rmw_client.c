@@ -4,6 +4,7 @@
 #include "detail/node.h"
 #include "detail/rmw_data_types.h"
 #include "detail/ros_topic_name_to_zenoh_key.h"
+#include "detail/time.h"
 #include "rcutils/strdup.h"
 #include "rmw/check_type_identifiers_match.h"
 #include "rmw/error_handling.h"
@@ -218,14 +219,10 @@ rmw_ret_t rmw_send_request(const rmw_client_t* client, const void* ros_request,
   // Create attachment
   *sequence_id = rmw_zp_client_get_next_sequence_number(client_data);
 
-  zp_time_since_epoch time_since_epoch;
-  if (zp_get_time_since_epoch(&time_since_epoch) < 0) {
-    RMW_SET_ERROR_MSG("Zenoh-pico port does not support zp_get_time_since_epoch");
-    goto fail_get_time_since_epoch;
+  int64_t source_timestamp;
+  if (rmw_zp_get_current_timestamp(&source_timestamp) != RMW_RET_OK) {
+    goto fail_get_current_timestamp;
   }
-
-  int64_t source_timestamp =
-      (int64_t)time_since_epoch.secs * 1000000000ll + (int64_t)time_since_epoch.nanos;
 
   rmw_zp_attachment_data_t attachment_data = {.sequence_number = *sequence_id,
                                               .source_timestamp = source_timestamp};
@@ -277,7 +274,7 @@ rmw_ret_t rmw_send_request(const rmw_client_t* client, const void* ros_request,
 fail_send_zenoh_query:
   z_drop(opts.attachment);
 fail_serialize_attachment:
-fail_get_time_since_epoch:
+fail_get_current_timestamp:
 fail_serialize_ros_request:
   allocator->deallocate(request_bytes, allocator->state);
   return RMW_RET_ERROR;

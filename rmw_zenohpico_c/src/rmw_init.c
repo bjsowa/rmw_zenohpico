@@ -76,7 +76,7 @@ fail_start_lease_task:
 fail_start_read_task:
   RMW_UNUSED(rmw_destroy_guard_condition(context->impl->graph_guard_condition))
 fail_create_graph_guard_condition:
-  z_close(z_move(context->impl->session), NULL);
+  z_close(z_loan_mut(context->impl->session), NULL);
 fail_session_open:
   RMW_UNUSED(rmw_init_options_fini(&context->options))
 fail_init_options_copy:
@@ -108,7 +108,7 @@ rmw_ret_t rmw_shutdown(rmw_context_t* context) {
   }
 
   // Close the zenoh session
-  if (z_close(z_move(context->impl->session), NULL) < 0) {
+  if (z_close(z_loan_mut(context->impl->session), NULL) < 0) {
     RMW_SET_ERROR_MSG("Error while closing zenoh session");
     ret = RMW_RET_ERROR;
   }

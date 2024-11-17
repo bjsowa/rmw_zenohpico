@@ -67,7 +67,7 @@ rmw_ret_t rmw_zp_service_fini(rmw_zp_service_t* service, rcutils_allocator_t* al
   return ret;
 }
 
-void rmw_zp_service_data_handler(const z_loaned_query_t* query, void* data) {
+void rmw_zp_service_data_handler(z_loaned_query_t* query, void* data) {
   rmw_zp_service_t* service_data = data;
   if (service_data == NULL) {
     // TODO(bjsowa): report error

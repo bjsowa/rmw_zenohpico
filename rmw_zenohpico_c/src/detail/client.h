@@ -66,7 +66,7 @@ size_t rmw_zp_client_get_next_sequence_number(rmw_zp_client_t* client);
 void rmw_zp_client_increment_queries_in_flight(rmw_zp_client_t* client);
 void rmw_zp_client_decrement_queries_in_flight(rmw_zp_client_t* client, bool* queries_in_flight);
 
-void rmw_zp_client_data_handler(const z_loaned_reply_t* reply, void* data);
+void rmw_zp_client_data_handler(z_loaned_reply_t* reply, void* data);
 void rmw_zp_client_data_dropper(void* data);
 
 rmw_ret_t rmw_zp_client_add_new_reply(rmw_zp_client_t* client, const z_loaned_bytes_t* attachment,

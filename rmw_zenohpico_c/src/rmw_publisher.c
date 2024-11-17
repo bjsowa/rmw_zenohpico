@@ -4,6 +4,7 @@
 #include "detail/publisher.h"
 #include "detail/rmw_data_types.h"
 #include "detail/ros_topic_name_to_zenoh_key.h"
+#include "detail/time.h"
 #include "detail/type_support.h"
 #include "rcutils/strdup.h"
 #include "rmw/check_type_identifiers_match.h"
@@ -150,7 +151,7 @@ rmw_publisher_t *rmw_create_publisher(const rmw_node_t *node,
   z_publisher_options_default(&opts);
   opts.congestion_control = Z_CONGESTION_CONTROL_DROP;
 
-#if Z_FEATURE_UNSTABLE_API == 1
+#ifdef Z_FEATURE_UNSTABLE_API
   if (publisher_data->adapted_qos_profile.reliability == RMW_QOS_POLICY_RELIABILITY_RELIABLE) {
     opts.reliability = Z_RELIABILITY_RELIABLE;
     if (publisher_data->adapted_qos_profile.history == RMW_QOS_POLICY_HISTORY_KEEP_ALL) {
@@ -161,7 +162,7 @@ rmw_publisher_t *rmw_create_publisher(const rmw_node_t *node,
   }
 #endif
 
-  if (z_declare_publisher(&publisher_data->pub, z_loan(context_impl->session), z_loan(keyexpr),
+  if (z_declare_publisher(z_loan(context_impl->session), &publisher_data->pub, z_loan(keyexpr),
                           &opts) < 0) {
     RMW_SET_ERROR_MSG("unable to create zenoh publisher");
     goto fail_create_zenoh_publisher;
@@ -328,14 +329,10 @@ rmw_ret_t rmw_publish(const rmw_publisher_t *publisher, const void *ros_message,
   // create attachment
   int64_t sequence_number = rmw_zp_publisher_get_next_sequence_number(publisher_data);
 
-  zp_time_since_epoch time_since_epoch;
-  if (zp_get_time_since_epoch(&time_since_epoch) < 0) {
-    RMW_SET_ERROR_MSG("Zenoh-pico port does not support zp_get_time_since_epoch");
-    goto fail_get_time_since_epoch;
+  int64_t source_timestamp;
+  if (rmw_zp_get_current_timestamp(&source_timestamp) != RMW_RET_OK) {
+    goto fail_get_current_timestamp;
   }
-
-  int64_t source_timestamp =
-      (int64_t)time_since_epoch.secs * 1000000000ll + (int64_t)time_since_epoch.nanos;
 
   rmw_zp_attachment_data_t attachment_data = {.sequence_number = sequence_number,
                                               .source_timestamp = source_timestamp};
@@ -368,7 +365,7 @@ rmw_ret_t rmw_publish(const rmw_publisher_t *publisher, const void *ros_message,
 fail_publish_message:
   z_drop(options.attachment);
 fail_serialize_attachment:
-fail_get_time_since_epoch:
+fail_get_current_timestamp:
 fail_serialize_ros_message:
   allocator->deallocate(msg_bytes, allocator->state);
   return RMW_RET_ERROR;

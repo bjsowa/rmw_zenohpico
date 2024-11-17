@@ -59,7 +59,7 @@ rmw_ret_t rmw_zp_subscription_fini(rmw_zp_subscription_t* subscription,
   return ret;
 }
 
-void rmw_zp_sub_data_handler(const z_loaned_sample_t* sample, void* data) {
+void rmw_zp_sub_data_handler(z_loaned_sample_t* sample, void* data) {
   rmw_zp_subscription_t* sub_data = data;
   if (sub_data == NULL) {
     // TODO(bjsowa): report error

@@ -101,7 +101,7 @@ void rmw_zp_client_decrement_queries_in_flight(rmw_zp_client_t* client, bool* qu
   z_mutex_unlock(z_loan_mut(client->in_flight_mutex));
 }
 
-void rmw_zp_client_data_handler(const z_loaned_reply_t* reply, void* data) {
+void rmw_zp_client_data_handler(z_loaned_reply_t* reply, void* data) {
   rmw_zp_client_t* client_data = data;
   if (client_data == NULL) {
     // TODO(bjsowa): report error

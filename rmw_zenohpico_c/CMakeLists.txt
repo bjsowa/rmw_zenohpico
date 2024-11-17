@@ -54,7 +54,7 @@ target_link_libraries(${PROJECT_NAME}
   rmw::rmw
   rosidl_runtime_c::rosidl_runtime_c
   rosidl_typesupport_microxrcedds_c::rosidl_typesupport_microxrcedds_c
-  zenohpico::zenohpico
+  zenohpico::lib
 )
 
 configure_rmw_library(${PROJECT_NAME})

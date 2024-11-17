@@ -38,7 +38,7 @@ rmw_ret_t rmw_zp_subscription_init(rmw_zp_subscription_t* subscription,
 rmw_ret_t rmw_zp_subscription_fini(rmw_zp_subscription_t* subscription,
                                    rcutils_allocator_t* allocator);
 
-void rmw_zp_sub_data_handler(const z_loaned_sample_t* sample, void* data);
+void rmw_zp_sub_data_handler(z_loaned_sample_t* sample, void* data);
 
 rmw_ret_t rmw_zp_subscription_add_new_message(rmw_zp_subscription_t* subscription,
                                               const z_loaned_bytes_t* attachment,

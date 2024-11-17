@@ -2,7 +2,7 @@
 
 #include "rmw/error_handling.h"
 
-static const char *const zenoh_key_format_str = "%d/%s/%s/%s";
+static const char *const zenoh_key_format_str = "%zu/%s/%s/%s";
 
 char *ros_topic_name_to_zenoh_key(const size_t domain_id, const char *const topic_name,
                                   const char *const topic_type, const char *const type_hash,

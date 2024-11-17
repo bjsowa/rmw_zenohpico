@@ -36,7 +36,7 @@ rmw_ret_t rmw_zp_service_init(rmw_zp_service_t* service, const rmw_qos_profile_t
 
 rmw_ret_t rmw_zp_service_fini(rmw_zp_service_t* service, rcutils_allocator_t* allocator);
 
-void rmw_zp_service_data_handler(const z_loaned_query_t* query, void* data);
+void rmw_zp_service_data_handler(z_loaned_query_t* query, void* data);
 
 rmw_ret_t rmw_zp_service_add_new_query(rmw_zp_service_t* service,
                                        const z_loaned_bytes_t* attachment,
