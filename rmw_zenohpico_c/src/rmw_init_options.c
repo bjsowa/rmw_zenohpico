@@ -115,13 +115,17 @@ rmw_ret_t rmw_init_options_copy(const rmw_init_options_t* src, rmw_init_options_
     goto fail_allocate_init_options_impl;
   });
 
-  // TODO(bjsowa): Add error checking when it will be supported in zenoh-pico
-  z_config_clone(&tmp.impl->config, z_loan(src->impl->config));
+  if (z_config_clone(&tmp.impl->config, z_loan(src->impl->config)) < 0) {
+    RMW_SET_ERROR_MSG("Failed to clone zenoh config.");
+    goto fail_clone_zenoh_config;
+  }
 
   *dst = tmp;
 
   return RMW_RET_OK;
 
+fail_clone_zenoh_config:
+  allocator.deallocate(tmp.impl, allocator.state);
 fail_allocate_init_options_impl:
   allocator.deallocate(tmp.enclave, allocator.state);
 fail_enclave:;

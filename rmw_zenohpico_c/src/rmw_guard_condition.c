@@ -66,7 +66,9 @@ rmw_ret_t rmw_trigger_guard_condition(const rmw_guard_condition_t *guard_conditi
 
   rmw_zp_guard_condition_t *guard_condition_data = guard_condition->data;
 
-  rmw_zp_guard_condition_trigger(guard_condition_data);
+  if (rmw_zp_guard_condition_trigger(guard_condition_data) != RMW_RET_OK) {
+    return RMW_RET_ERROR;
+  }
 
   return RMW_RET_OK;
 }

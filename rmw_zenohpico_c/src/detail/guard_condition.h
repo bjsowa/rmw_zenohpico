@@ -17,7 +17,7 @@ rmw_ret_t rmw_zp_guard_condition_init(rmw_zp_guard_condition_t* guard_condition)
 
 rmw_ret_t rmw_zp_guard_condition_fini(rmw_zp_guard_condition_t* guard_condition);
 
-void rmw_zp_guard_condition_trigger(rmw_zp_guard_condition_t* guard_condition);
+rmw_ret_t rmw_zp_guard_condition_trigger(rmw_zp_guard_condition_t* guard_condition);
 
 bool rmw_zp_guard_condition_check_and_attach_condition_if_not(
     rmw_zp_guard_condition_t* guard_condition, rmw_zp_wait_set_t* wait_set);
